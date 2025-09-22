@@ -30,8 +30,8 @@ public:
     ~Game();
 
     void PostInit();
-    void Update();
-    void Render();
+    void UpdateJS();
+    void RenderJS();
     bool IsAttractMode() const;
 
     // 新增：JavaScript 相關功能
@@ -49,11 +49,10 @@ public:
     void    MovePlayerCamera(Vec3 const& offset);
     Player* GetPlayer();
     void    Update(float gameDeltaSeconds, float systemDeltaSeconds);
-    void    Render(float gameDeltaSeconds, float systemDeltaSeconds);
+    void    Render();
 
     // 新增：控制台命令處理
-    void   HandleConsoleCommands();
-    Clock* m_gameClock = nullptr;
+    void HandleConsoleCommands();
 
 private:
     void UpdateFromKeyBoard();
@@ -63,27 +62,19 @@ private:
     void RenderEntities() const;
 
     void SpawnPlayer();
-    void SpawnProp();
+    void InitPlayer() const;
+    void SpawnProps();
+    void InitProps() const;
 
 
     void SetupJavaScriptBindings();
     void InitializeJavaScriptFramework();
 
-    Camera* m_screenCamera = nullptr;
-    Player* m_player       = nullptr;
-    Prop*   m_firstCube    = nullptr;
-    Prop*   m_secondCube   = nullptr;
-    Prop*   m_sphere       = nullptr;
-    Prop*   m_grid         = nullptr;
-
-    eGameState m_gameState = eGameState::ATTRACT;
-
-    // 新增：物件管理
-    std::vector<Prop*> m_props;  // 用於 JavaScript 管理的物件清單
-
-    // 新增：JavaScript 狀態
-    bool m_hasInitializedJS = false;
-    bool m_hasRunJSTests    = false;
+    Camera*            m_screenCamera = nullptr;
+    Player*            m_player       = nullptr;
+    Clock*             m_gameClock    = nullptr;
+    std::vector<Prop*> m_props;
+    eGameState         m_gameState = eGameState::ATTRACT;
 
     Vec3 m_originalPlayerPosition = Vec3(-2.f, 0.f, 1.f);  // 儲存原始位置
     bool m_cameraShakeActive      = false;                        // 追蹤震動狀態

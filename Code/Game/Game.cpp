@@ -17,12 +17,11 @@
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Resource/ResourceSubsystem.hpp"
-#include "Engine/Resource/Resource/ModelResource.hpp"
 #include "Engine/Scripting/V8Subsystem.hpp"
-#include "Game/Framework/App.hpp"
-#include "Game/Framework/GameCommon.hpp"
 #include "Game/Player.hpp"
 #include "Game/Prop.hpp"
+#include "Game/Framework/App.hpp"
+#include "Game/Framework/GameCommon.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -30,11 +29,13 @@
 //----------------------------------------------------------------------------------------------------
 Game::Game()
 {
-    DAEMON_LOG(LogGame, eLogVerbosity::Log, Stringf("(Game::Game)(start)"));
-    SpawnPlayer();
-    SpawnProp();
+    DAEMON_LOG(LogGame, eLogVerbosity::Log, StringFormat("(Game::Game)(start)"));
 
-    m_gameState    = eGameState::GAME;
+    SpawnPlayer();
+    InitPlayer();
+    SpawnProps();
+    InitProps();
+
     m_screenCamera = new Camera();
 
     Vec2 const bottomLeft = Vec2::ZERO;
@@ -44,12 +45,6 @@ Game::Game()
     m_screenCamera->SetOrthoGraphicView(bottomLeft, clientDimensions);
     m_screenCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
     m_gameClock = new Clock(Clock::GetSystemClock());
-
-    m_player->m_position     = Vec3(-2.f, 0.f, 1.f);
-    m_firstCube->m_position  = Vec3(2.f, 2.f, 0.f);
-    m_secondCube->m_position = Vec3(-2.f, -2.f, 0.f);
-    m_sphere->m_position     = Vec3(10, -5, 1);
-    m_grid->m_position       = Vec3::ZERO;
 
     DebugAddWorldBasis(Mat44(), -1.f);
 
@@ -75,10 +70,7 @@ Game::~Game()
     m_props.clear();
 
     GAME_SAFE_RELEASE(m_gameClock);
-    GAME_SAFE_RELEASE(m_grid);
-    GAME_SAFE_RELEASE(m_sphere);
-    GAME_SAFE_RELEASE(m_secondCube);
-    GAME_SAFE_RELEASE(m_firstCube);
+
     GAME_SAFE_RELEASE(m_player);
     GAME_SAFE_RELEASE(m_screenCamera);
 
@@ -89,15 +81,14 @@ Game::~Game()
 void Game::PostInit()
 {
     InitializeJavaScriptFramework();
-    m_hasInitializedJS = true;
 }
 
 //----------------------------------------------------------------------------------------------------
-void Game::Update()
+void Game::UpdateJS()
 {
     // Temporarily disable JavaScript calls to test for buffer overrun
     // Update JavaScript framework - this will call the actual C++ Update(float,float)
-    if (m_hasInitializedJS && g_v8Subsystem && g_v8Subsystem->IsInitialized())
+    if (  g_v8Subsystem && g_v8Subsystem->IsInitialized())
     {
         float       deltaTimeMs = static_cast<float>(m_gameClock->GetDeltaSeconds() * 1000.0f);
         std::string updateCmd   = "globalThis.JSEngine.update(" + std::to_string(deltaTimeMs) + ");";
@@ -116,11 +107,11 @@ void Game::Update()
 }
 
 //----------------------------------------------------------------------------------------------------
-void Game::Render()
+void Game::RenderJS()
 {
     // Temporarily disable JavaScript calls to test for buffer overrun
     // Render JavaScript framework - this will call the actual C++ Render(float,float)
-    if (m_hasInitializedJS && g_v8Subsystem && g_v8Subsystem->IsInitialized())
+    if ( g_v8Subsystem && g_v8Subsystem->IsInitialized())
     {
         ExecuteJavaScriptCommand("globalThis.JSEngine.render();");
     }
@@ -303,13 +294,11 @@ void Game::UpdateFromController()
 //----------------------------------------------------------------------------------------------------
 void Game::UpdateEntities(float const gameDeltaSeconds, float const systemDeltaSeconds) const
 {
-    // 更新玩家
     if (m_player)
     {
-        m_player->Update(gameDeltaSeconds);
+        m_player->Update(systemDeltaSeconds);
     }
 
-    // 更新所有物件
     for (Prop* prop : m_props)
     {
         if (prop)
@@ -317,25 +306,23 @@ void Game::UpdateEntities(float const gameDeltaSeconds, float const systemDeltaS
             prop->Update(gameDeltaSeconds);
         }
     }
-    // m_player->Update(systemDeltaSeconds);
-    // m_firstCube->Update(gameDeltaSeconds);
-    // m_secondCube->Update(gameDeltaSeconds);
-    // m_sphere->Update(gameDeltaSeconds);
-    // m_grid->Update(gameDeltaSeconds);
 
-    m_firstCube->m_orientation.m_pitchDegrees += 30.f * gameDeltaSeconds;
-    m_firstCube->m_orientation.m_rollDegrees += 30.f * gameDeltaSeconds;
+    m_props[0]->m_orientation.m_pitchDegrees += 30.f * gameDeltaSeconds;
+    m_props[0]->m_orientation.m_rollDegrees += 30.f * gameDeltaSeconds;
 
     float const time       = static_cast<float>(m_gameClock->GetTotalSeconds());
     float const colorValue = (sinf(time) + 1.0f) * 0.5f * 255.0f;
 
-    m_secondCube->m_color.r = static_cast<unsigned char>(colorValue);
-    m_secondCube->m_color.g = static_cast<unsigned char>(colorValue);
-    m_secondCube->m_color.b = static_cast<unsigned char>(colorValue);
+    m_props[1]->m_color.r = static_cast<unsigned char>(colorValue);
+    m_props[1]->m_color.g = static_cast<unsigned char>(colorValue);
+    m_props[1]->m_color.b = static_cast<unsigned char>(colorValue);
 
-    m_sphere->m_orientation.m_yawDegrees += 45.f * gameDeltaSeconds;
+    m_props[2]->m_orientation.m_yawDegrees += 45.f * gameDeltaSeconds;
 
-    DebugAddScreenText(Stringf("Time: %.2f\nFPS: %.2f\nScale: %.1f", m_gameClock->GetTotalSeconds(), 1.f / m_gameClock->GetDeltaSeconds(), m_gameClock->GetTimeScale()), m_screenCamera->GetOrthographicTopRight() - Vec2(250.f, 60.f), 20.f, Vec2::ZERO, 0.f, Rgba8::WHITE, Rgba8::WHITE);
+    DebugAddScreenText(Stringf("GameTime:   %.2f", m_gameClock->GetTotalSeconds()), m_screenCamera->GetOrthographicTopRight() - Vec2(500.f, 20.f), 20.f, Vec2::ZERO, 0.f, Rgba8::WHITE, Rgba8::WHITE);
+    DebugAddScreenText(Stringf("SystemTime: %.2f", Clock::GetSystemClock().GetTotalSeconds()), m_screenCamera->GetOrthographicTopRight() - Vec2(500.f, 40.f), 20.f, Vec2::ZERO, 0.f, Rgba8::WHITE, Rgba8::WHITE);
+    DebugAddScreenText(Stringf("FPS:        %.2f", 1.f / m_gameClock->GetDeltaSeconds()), m_screenCamera->GetOrthographicTopRight() - Vec2(500.f, 60.f), 20.f, Vec2::ZERO, 0.f, Rgba8::WHITE, Rgba8::WHITE);
+    DebugAddScreenText(Stringf("Scale:      %.2f", m_gameClock->GetTimeScale()), m_screenCamera->GetOrthographicTopRight() - Vec2(500.f, 80.f), 20.f, Vec2::ZERO, 0.f, Rgba8::WHITE, Rgba8::WHITE);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -358,11 +345,6 @@ void Game::RenderAttractMode() const
 //----------------------------------------------------------------------------------------------------
 void Game::RenderEntities() const
 {
-    m_firstCube->Render();
-    m_secondCube->Render();
-    m_sphere->Render();
-    m_grid->Render();
-
     g_renderer->SetModelConstants(m_player->GetModelToWorldTransform());
     m_player->Render();
 
@@ -378,25 +360,40 @@ void Game::SpawnPlayer()
     m_player = new Player(this);
 }
 
+void Game::InitPlayer() const
+{
+    m_player->m_position = Vec3(-2.f, 0.f, 1.f);
+}
+
 //----------------------------------------------------------------------------------------------------
-void Game::SpawnProp()
+void Game::SpawnProps()
 {
     Texture const* texture = g_renderer->CreateOrGetTextureFromFile("Data/Images/TestUV.png");
 
-    m_firstCube  = new Prop(this);
-    m_secondCube = new Prop(this);
-    m_sphere     = new Prop(this, texture);
-    m_grid       = new Prop(this);
+    m_props.reserve(4);
 
-    m_firstCube->InitializeLocalVertsForCube();
-    m_secondCube->InitializeLocalVertsForCube();
-    m_sphere->InitializeLocalVertsForSphere();
-    m_grid->InitializeLocalVertsForGrid();
+    Prop* prop1 = new Prop(this);
+    Prop* prop2 = new Prop(this);
+    Prop* prop3 = new Prop(this, texture);
+    Prop* prop4 = new Prop(this);
 
-    if (m_firstCube) m_props.push_back(m_firstCube);
-    if (m_secondCube) m_props.push_back(m_secondCube);
-    if (m_sphere) m_props.push_back(m_sphere);
-    if (m_grid) m_props.push_back(m_grid);
+    if (prop1 != nullptr) m_props.push_back(prop1);
+    if (prop2 != nullptr) m_props.push_back(prop2);
+    if (prop3 != nullptr) m_props.push_back(prop3);
+    if (prop4 != nullptr) m_props.push_back(prop4);
+}
+
+void Game::InitProps() const
+{
+    m_props[0]->InitializeLocalVertsForCube();
+    m_props[1]->InitializeLocalVertsForCube();
+    m_props[2]->InitializeLocalVertsForSphere();
+    m_props[3]->InitializeLocalVertsForGrid();
+
+    m_props[0]->m_position = Vec3(2.f, 2.f, 0.f);
+    m_props[1]->m_position = Vec3(-2.f, -2.f, 0.f);
+    m_props[2]->m_position = Vec3(10, -5, 1);
+    m_props[3]->m_position = Vec3::ZERO;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -674,7 +671,7 @@ void Game::Update(float gameDeltaSeconds,
     HandleConsoleCommands();
 }
 
-void Game::Render(float gameDeltaSeconds, float systemDeltaSeconds)
+void Game::Render()
 {
     //-Start-of-Game-Camera---------------------------------------------------------------------------
 
