@@ -42,6 +42,9 @@
   <PropertyGroup>
     <V8LibPath>$(SolutionDir)../Engine/Code/ThirdParty/packages/v8-v143-x64.13.0.245.25/lib/$(Configuration)/</V8LibPath>
     <V8RedistLibPath>$(SolutionDir)../Engine/Code/ThirdParty/packages/v8.redist-v143-x64.13.0.245.25/lib/$(Configuration)/</V8RedistLibPath>
+    <!-- Script Module Configuration: Enable/disable V8 JavaScript integration -->
+    <!-- Set to 'true' to include V8 runtime deployment, 'false' to deploy executable only -->
+    <EnableScriptModule>true</EnableScriptModule>
   </PropertyGroup>
   <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
   <!-- CONFIGURATION-SPECIFIC PROPERTIES -->
@@ -170,9 +173,13 @@
       <AdditionalDependencies>winmm.lib;dbghelp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <!-- Complete application deployment: executable + V8 runtime DLLs -->
-    <PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='true'">
       <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/" &amp; xcopy /Y /F "$(V8RedistLibPath)" "$(SolutionDir)Run/"</Command>
       <Message>Deploying $(TargetFileName) and V8 Debug runtime to game directory...</Message>
+    </PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='false'">
+      <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/"</Command>
+      <Message>Deploying $(TargetFileName) (no V8 runtime) to game directory...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- Release Win32 Configuration Settings -->
@@ -199,9 +206,13 @@
       <AdditionalDependencies>winmm.lib;dbghelp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <!-- Complete application deployment: executable + V8 runtime DLLs -->
-    <PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='true'">
       <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/" &amp; xcopy /Y /F "$(V8RedistLibPath)" "$(SolutionDir)Run/"</Command>
       <Message>Deploying $(TargetFileName) and V8 Release runtime to game directory...</Message>
+    </PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='false'">
+      <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/"</Command>
+      <Message>Deploying $(TargetFileName) (no V8 runtime) to game directory...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- Debug x64 Configuration Settings -->
@@ -223,9 +234,13 @@
       <AdditionalDependencies>winmm.lib;dbghelp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <!-- Complete application deployment: executable + V8 runtime DLLs -->
-    <PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='true'">
       <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/" &amp; xcopy /Y /F "$(V8RedistLibPath)" "$(SolutionDir)Run/"</Command>
       <Message>Deploying $(TargetFileName) and V8 Debug runtime to game directory...</Message>
+    </PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='false'">
+      <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/"</Command>
+      <Message>Deploying $(TargetFileName) (no V8 runtime) to game directory...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- Release x64 Configuration Settings -->
@@ -251,9 +266,13 @@
       <AdditionalDependencies>winmm.lib;dbghelp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <!-- Complete application deployment: executable + V8 runtime DLLs -->
-    <PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='true'">
       <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/" &amp; xcopy /Y /F "$(V8RedistLibPath)" "$(SolutionDir)Run/"</Command>
       <Message>Deploying $(TargetFileName) and V8 Release runtime to game directory...</Message>
+    </PostBuildEvent>
+    <PostBuildEvent Condition="'$(EnableScriptModule)'=='false'">
+      <Command>xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Run/"</Command>
+      <Message>Deploying $(TargetFileName) (no V8 runtime) to game directory...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
