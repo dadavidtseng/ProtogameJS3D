@@ -410,7 +410,7 @@ void App::SetupScriptingBindings()
     g_v8Subsystem->RegisterScriptableObject("game", m_gameScriptInterface);
 
     // Initialize hot-reload system
-    std::string projectRoot = "C:/p4/Personal/SD/FirstV8/";
+    std::string projectRoot = "C:/p4/Personal/SD/ProtogameJS3D/";
     if (m_gameScriptInterface->InitializeHotReload(g_v8Subsystem, projectRoot))
     {
         DAEMON_LOG(LogScript, eLogVerbosity::Log, StringFormat("(App::SetupScriptingBindings) Hot-reload system initialized successfully"));

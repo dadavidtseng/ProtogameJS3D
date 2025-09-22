@@ -638,7 +638,7 @@ ScriptMethodResult GameScriptInterface::ExecuteGetFileTimestamp(const std::vecto
         
         // The filePath comes from HotReloader as 'Data/Scripts/filename.js'
         // Build absolute path from the known project structure
-        std::string projectRoot = "C:/p4/Personal/SD/FirstV8/";
+        std::string projectRoot = "C:/p4/Personal/SD/ProtogameJS3D/";
         std::string fullPath = projectRoot + "Run/" + filePath;
         
         // Debug: Log the paths being used
