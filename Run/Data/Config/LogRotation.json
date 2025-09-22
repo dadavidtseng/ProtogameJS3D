@@ -1,0 +1,26 @@
+{
+  "logRotation": {
+    "fileRotation": {
+      "maxFileSizeMB": 100,
+      "maxTimeIntervalHours": 2,
+      "enableCompression": true,
+      "compressionLevel": 6,
+      "asyncCompression": true
+    },
+    "fileManagement": {
+      "logDirectory": "Logs",
+      "currentLogName": "latest.log",
+      "sessionPrefix": "session"
+    },
+    "retention": {
+      "retentionDays": 30,
+      "maxArchivedFiles": 200,
+      "maxTotalArchiveSizeMB": 500
+    },
+    "diskSpace": {
+      "warningThresholdGB": 5.0,
+      "criticalThresholdGB": 2.0,
+      "emergencyThresholdGB": 0.5
+    }
+  }
+}

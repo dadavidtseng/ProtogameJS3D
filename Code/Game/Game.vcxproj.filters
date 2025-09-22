@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- Game.vcxproj.filters - Application(.exe) Filters Configuration -->
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- FILTER HIERARCHY DEFINITION -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <!-- Top-Level Categories -->
+    <Filter Include="GameCore">
+      <UniqueIdentifier>{960b6e9d-ce87-4f51-97f1-2e293af9bfc3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{8f6262e8-8950-43f3-a0f7-ee09a9ca5217}</UniqueIdentifier>
+    </Filter>
+    <!-- Game Core Subcategories -->
+    <Filter Include="GameCore\EntitySystem">
+      <UniqueIdentifier>{e1d4c8a9-7b5f-4321-9876-1234567890ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameCore\GameLogic">
+      <UniqueIdentifier>{f2e5d9ba-8c6e-5432-a987-2345678901bc}</UniqueIdentifier>
+    </Filter>
+    <!-- Framework Subcategories -->
+    <Filter Include="Framework\ApplicationCore">
+      <UniqueIdentifier>{a3f6eacb-9d7f-6543-ba98-3456789012cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework\V8 Integration">
+      <UniqueIdentifier>{b4071bdc-ae80-7654-cb09-456789012def}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework\Development Tools">
+      <UniqueIdentifier>{c5182ced-bf91-8765-dc10-56789012ef01}</UniqueIdentifier>
+    </Filter>
+    <!-- Subsystem Categories -->
+    <!-- Documentation Categories -->
+    <Filter Include="Documentation\Configuration">
+      <UniqueIdentifier>{d6293dfe-c0a2-9876-ed21-6789012f0123}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- SOURCE FILE ORGANIZATION -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <!-- Game Core Entity System -->
+    <ClCompile Include="Entity.cpp">
+      <Filter>GameCore\EntitySystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>GameCore\EntitySystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Prop.cpp">
+      <Filter>GameCore\EntitySystem</Filter>
+    </ClCompile>
+    <!-- Game Core Logic -->
+    <ClCompile Include="Game.cpp">
+      <Filter>GameCore\GameLogic</Filter>
+    </ClCompile>
+    <!-- Framework Application Core -->
+    <!-- Framework V8 Integration -->
+    <!-- Framework Development Tools -->
+    <!-- Subsystems -->
+    <ClCompile Include="Framework/App.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework/FileWatcher.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework/GameCommon.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework/GameScriptInterface.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework/Main_Windows.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework/ScriptReloader.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Subsystem/Light/LightSubsystem.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- HEADER FILE ORGANIZATION -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <!-- Game Core Entity System Headers -->
+    <ClInclude Include="Entity.hpp">
+      <Filter>GameCore\EntitySystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.hpp">
+      <Filter>GameCore\EntitySystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Prop.hpp">
+      <Filter>GameCore\EntitySystem</Filter>
+    </ClInclude>
+    <!-- Game Core Logic Headers -->
+    <ClInclude Include="Game.hpp">
+      <Filter>GameCore\GameLogic</Filter>
+    </ClInclude>
+    <!-- Framework Application Core Headers -->
+    <!-- Framework V8 Integration Headers -->
+    <!-- Framework Development Tools Headers -->
+    <!-- Subsystems Headers -->
+    <!-- Configuration Headers -->
+    <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>Documentation\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework/App.hpp" />
+    <ClInclude Include="Framework/FileWatcher.hpp" />
+    <ClInclude Include="Framework/GameCommon.hpp" />
+    <ClInclude Include="Framework/GameScriptInterface.hpp" />
+    <ClInclude Include="Framework/ScriptReloader.hpp" />
+    <ClInclude Include="Subsystem/Light/LightSubsystem.hpp" />
+  </ItemGroup>
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- DOCUMENTATION AND PROJECT FILES -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <!-- Project Documentation -->
+    <None Include="../../Docs/README.md">
+      <Filter>Documentation</Filter>
+    </None>
+  </ItemGroup>
+</Project>
