@@ -364,10 +364,7 @@ ScriptMethodResult GameScriptInterface::ExecuteRender(const std::vector<std::any
 
     try
     {
-        // Calculate delta times internally since JS doesn't pass them
-        float gameDeltaSeconds   = static_cast<float>(m_game->m_gameClock->GetDeltaSeconds());
-        float systemDeltaSeconds = static_cast<float>(Clock::GetSystemClock().GetDeltaSeconds());
-        m_game->Render(gameDeltaSeconds, systemDeltaSeconds);
+        m_game->Render();
         return ScriptMethodResult::Success(Stringf("Render Success"));
     }
     catch (const std::exception& e)
@@ -383,10 +380,9 @@ ScriptMethodResult GameScriptInterface::ExecuteUpdate(const std::vector<std::any
 
     try
     {
-        float deltaTimeMs = ExtractFloat(args[0]);
-        // Convert milliseconds to seconds for gameDeltaSeconds
-        float gameDeltaSeconds   = deltaTimeMs / 1000.0f;
-        float systemDeltaSeconds = static_cast<float>(Clock::GetSystemClock().GetDeltaSeconds());
+        float gameDeltaSeconds   = ExtractFloat(args[0]);
+        float systemDeltaSeconds = ExtractFloat(args[1]);
+
         m_game->Update(gameDeltaSeconds, systemDeltaSeconds);
         return ScriptMethodResult::Success(Stringf("Update Success"));
     }

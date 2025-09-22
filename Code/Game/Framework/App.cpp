@@ -297,7 +297,7 @@ void App::Update()
         m_gameScriptInterface->ProcessPendingHotReloadEvents();
     }
 
-    g_game->Update();
+    g_game->UpdateJS();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -312,7 +312,7 @@ void App::Render() const
     Rgba8 const clearColor = Rgba8::GREY;
 
     g_renderer->ClearScreen(clearColor, Rgba8::BLACK);
-    g_game->Render();
+    g_game->RenderJS();
 
     AABB2 const box = AABB2(Vec2::ZERO, Vec2(1600.f, 30.f));
 
