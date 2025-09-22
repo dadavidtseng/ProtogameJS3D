@@ -6,7 +6,6 @@
 #include "Game/Player.hpp"
 
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -21,8 +20,6 @@ Player::Player(Game* owner)
     m_worldCamera->SetPerspectiveGraphicView(2.f, 60.f, 0.1f, 100.f);
 
     m_worldCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
-
-    m_worldCamera->SetPosition(Vec3(-2, 0, 0));
 
     Mat44 c2r;
 

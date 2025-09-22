@@ -6,12 +6,11 @@
 #pragma once
 #include <vector>
 
-#include "Engine/Core/Rgba8.hpp"
-#include "Engine/Renderer/VertexUtils.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Renderer/VertexUtils.hpp"
 #include "Game/Entity.hpp"
 
-//----------------------------------------------------------------------------------------------------
+//-Forward-Declaration--------------------------------------------------------------------------------
 class Texture;
 struct Vertex_PCU;
 
@@ -19,16 +18,14 @@ struct Vertex_PCU;
 class Prop : public Entity
 {
 public:
-    Prop(Game* owner, Texture const* texture = nullptr);
+    explicit Prop(Game* owner, Texture const* texture = nullptr);
 
     void Update(float deltaSeconds) override;
     void Render() const override;
+
     void InitializeLocalVertsForCube();
     void InitializeLocalVertsForSphere();
     void InitializeLocalVertsForGrid();
-    void InitializeLocalVertsForCylinder();
-    void InitializeLocalVertsForWorldCoordinateArrows();
-    void InitializeLocalVertsForText2D();
 
 private:
     std::vector<Vertex_PCU> m_vertexes;

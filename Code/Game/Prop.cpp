@@ -6,11 +6,10 @@
 #include "Game/Prop.hpp"
 
 #include "Engine/Core/Clock.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
-#include "Engine/Renderer/VertexUtils.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/VertexUtils.hpp"
 #include "Game/Framework/GameCommon.hpp"
 #include "ThirdParty/stb/stb_image.h"
 
@@ -99,19 +98,4 @@ void Prop::InitializeLocalVertsForGrid()
         AddVertsForAABB3D(m_vertexes, boundsX, colorX);
         AddVertsForAABB3D(m_vertexes, boundsY, colorY);
     }
-}
-
-//----------------------------------------------------------------------------------------------------
-void Prop::InitializeLocalVertsForWorldCoordinateArrows()
-{
-    AddVertsForArrow3D(m_vertexes, m_position, m_position + Vec3::X_BASIS * 2.f, 0.6f, 0.25f, 0.4f, Rgba8::RED);
-    AddVertsForArrow3D(m_vertexes, m_position, m_position + Vec3::Y_BASIS * 2.f, 0.6f, 0.25f, 0.4f, Rgba8::GREEN);
-    AddVertsForArrow3D(m_vertexes, m_position, m_position + Vec3::Z_BASIS * 2.f, 0.6f, 0.25f, 0.4f, Rgba8::BLUE);
-}
-
-//----------------------------------------------------------------------------------------------------
-void Prop::InitializeLocalVertsForText2D()
-{
-    // g_theBitmapFont->AddVertsForTextInBox2D(m_vertexes, "XXX", AABB2::ZERO_TO_ONE, 10.f);
-    g_bitmapFont->AddVertsForText3DAtOriginXForward(m_vertexes, "ABCDEFGHIJKL", 1.f);
 }
