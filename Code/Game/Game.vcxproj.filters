@@ -82,9 +82,6 @@
     <ClCompile Include="Framework/ScriptReloader.cpp">
       <Filter>GameCore</Filter>
     </ClCompile>
-    <ClCompile Include="Subsystem/Light/LightSubsystem.cpp">
-      <Filter>GameCore</Filter>
-    </ClCompile>
   </ItemGroup>
   <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
   <!-- HEADER FILE ORGANIZATION -->
@@ -117,7 +114,6 @@
     <ClInclude Include="Framework/GameCommon.hpp" />
     <ClInclude Include="Framework/GameScriptInterface.hpp" />
     <ClInclude Include="Framework/ScriptReloader.hpp" />
-    <ClInclude Include="Subsystem/Light/LightSubsystem.hpp" />
   </ItemGroup>
   <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
   <!-- DOCUMENTATION AND PROJECT FILES -->
