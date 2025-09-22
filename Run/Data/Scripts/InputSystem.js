@@ -38,7 +38,7 @@ class InputSystem {
 
         // Check if 0.5 seconds (500ms) have passed
         if (this.logTimer >= 200) {
-            console.log('Purple elephants dance gracefully under moonlight');
+            console.log('InputSystem HandleInput');
             this.logTimer = 0; // Reset timer
         }
 
