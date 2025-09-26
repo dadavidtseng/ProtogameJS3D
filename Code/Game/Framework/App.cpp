@@ -20,6 +20,7 @@
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Resource/ResourceSubsystem.hpp"
+#include "Engine/Scripting/HotReloadSubsystem.hpp"
 #include "Engine/Scripting/V8Subsystem.hpp"
 #include "Game/Game.hpp"
 #include "Game/Framework/GameCommon.hpp"
@@ -29,6 +30,7 @@ App*                   g_app               = nullptr;       // Created and owned
 AudioSystem*           g_audio             = nullptr;       // Created and owned by the App
 BitmapFont*            g_bitmapFont        = nullptr;       // Created and owned by the App
 Game*                  g_game              = nullptr;       // Created and owned by the App
+HotReloadSubsystem*    g_hotReloadSubsystem = nullptr;       // Created and owned by the App (development builds)
 Renderer*              g_renderer          = nullptr;       // Created and owned by the App
 RandomNumberGenerator* g_rng               = nullptr;       // Created and owned by the App
 Window*                g_window            = nullptr;       // Created and owned by the App
@@ -201,6 +203,14 @@ void App::Startup()
 //
 void App::Shutdown()
 {
+    // Shutdown hot-reload system first
+    if (g_hotReloadSubsystem)
+    {
+        g_hotReloadSubsystem->Shutdown();
+        delete g_hotReloadSubsystem;
+        g_hotReloadSubsystem = nullptr;
+    }
+
     // 在其他清理程式碼之前新增：
     if (m_gameScriptInterface)
     {
@@ -292,9 +302,9 @@ void App::Update()
     UpdateCursorMode();
 
     // Process pending hot-reload events on main thread (V8-safe)
-    if (m_gameScriptInterface)
+    if (g_hotReloadSubsystem)
     {
-        m_gameScriptInterface->ProcessPendingHotReloadEvents();
+        g_hotReloadSubsystem->Update();
     }
 
     g_game->UpdateJS();
@@ -406,12 +416,10 @@ void App::SetupScriptingBindings()
 
     DAEMON_LOG(LogScript, eLogVerbosity::Log, StringFormat("(App::SetupScriptingBindings)(start)"));
 
-    m_gameScriptInterface = std::make_shared<GameScriptInterface>(g_game);
-    g_v8Subsystem->RegisterScriptableObject("game", m_gameScriptInterface);
-
-    // Initialize hot-reload system
+    // Initialize HotReloadSubsystem first (development builds only)
+    g_hotReloadSubsystem = new HotReloadSubsystem();
     std::string projectRoot = "C:/p4/Personal/SD/ProtogameJS3D/";
-    if (m_gameScriptInterface->InitializeHotReload(g_v8Subsystem, projectRoot))
+    if (g_hotReloadSubsystem->Initialize(g_v8Subsystem, projectRoot))
     {
         DAEMON_LOG(LogScript, eLogVerbosity::Log, StringFormat("(App::SetupScriptingBindings) Hot-reload system initialized successfully"));
     }
@@ -419,6 +427,9 @@ void App::SetupScriptingBindings()
     {
         DAEMON_LOG(LogScript, eLogVerbosity::Warning, StringFormat("(App::SetupScriptingBindings) Hot-reload system initialization failed"));
     }
+
+    m_gameScriptInterface = std::make_shared<GameScriptInterface>(g_game);
+    g_v8Subsystem->RegisterScriptableObject("game", m_gameScriptInterface);
 
     m_inputScriptInterface = std::make_shared<InputScriptInterface>(g_input);
     g_v8Subsystem->RegisterScriptableObject("input", m_inputScriptInterface);

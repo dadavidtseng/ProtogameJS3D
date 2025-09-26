@@ -43,7 +43,7 @@ private:
     void UpdateCursorMode();
     void SetupScriptingBindings();
 
-    Camera*                              m_devConsoleCamera = nullptr;
-    std::shared_ptr<GameScriptInterface> m_gameScriptInterface;
+    Camera*                               m_devConsoleCamera = nullptr;
+    std::shared_ptr<GameScriptInterface>  m_gameScriptInterface;
     std::shared_ptr<InputScriptInterface> m_inputScriptInterface;
 };
