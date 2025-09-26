@@ -9,6 +9,7 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/Camera.hpp"
+#include "Framework/GameCommon.hpp"
 #include "Game/Game.hpp"
 
 //----------------------------------------------------------------------------------------------------
@@ -36,8 +37,7 @@ Player::Player(Game* owner)
 //----------------------------------------------------------------------------------------------------
 Player::~Player()
 {
-    delete m_worldCamera;
-    m_worldCamera = nullptr;
+    GAME_SAFE_RELEASE(m_worldCamera);
 }
 
 //----------------------------------------------------------------------------------------------------

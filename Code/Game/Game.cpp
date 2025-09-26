@@ -90,9 +90,9 @@ void Game::UpdateJS()
     // Update JavaScript framework - this will call the actual C++ Update(float,float)
     if (  g_v8Subsystem && g_v8Subsystem->IsInitialized())
     {
-        float       deltaTimeMs = static_cast<float>(m_gameClock->GetDeltaSeconds() * 1000.0f);
-        std::string updateCmd   = "globalThis.JSEngine.update(" + std::to_string(deltaTimeMs) + ");";
-        ExecuteJavaScriptCommand(updateCmd);
+        float const gameDeltaSeconds   = static_cast<float>(m_gameClock->GetDeltaSeconds());
+        float const systemDeltaSeconds = static_cast<float>(Clock::GetSystemClock().GetDeltaSeconds());
+        ExecuteJavaScriptCommand(StringFormat("globalThis.JSEngine.update({}, {});", std::to_string(gameDeltaSeconds), std::to_string(systemDeltaSeconds)));
     }
     // else
     // {
@@ -113,7 +113,7 @@ void Game::RenderJS()
     // Render JavaScript framework - this will call the actual C++ Render(float,float)
     if ( g_v8Subsystem && g_v8Subsystem->IsInitialized())
     {
-        ExecuteJavaScriptCommand("globalThis.JSEngine.render();");
+        ExecuteJavaScriptCommand(StringFormat("globalThis.JSEngine.render();"));
     }
     // else
     // {
@@ -655,13 +655,9 @@ Player* Game::GetPlayer()
     return m_player;
 }
 
-void Game::Update(float gameDeltaSeconds,
-                  float systemDeltaSeconds)
+void Game::Update(float const gameDeltaSeconds,
+                  float const systemDeltaSeconds)
 {
-    // Note: gameDeltaSeconds and systemDeltaSeconds are already passed in, don't recalculate
-    gameDeltaSeconds   = static_cast<float>(m_gameClock->GetDeltaSeconds());
-    systemDeltaSeconds = static_cast<float>(Clock::GetSystemClock().GetDeltaSeconds());
-
     UpdateEntities(gameDeltaSeconds, systemDeltaSeconds);
     UpdateFromKeyBoard();
     UpdateFromController();
@@ -690,7 +686,7 @@ void Game::Render()
         DebugAddScreenText(Stringf("ClientDimensions=(%.1f,%.1f)", clientDimensions.x, clientDimensions.y), Vec2(0, 40), 20.f, Vec2::ZERO, 0.f);
         DebugAddScreenText(Stringf("WindowPosition=(%.1f,%.1f)", windowPosition.x, windowPosition.y), Vec2(0, 60), 20.f, Vec2::ZERO, 0.f);
         DebugAddScreenText(Stringf("ClientPosition=(%.1f,%.1f)", clientPosition.x, clientPosition.y), Vec2(0, 80), 20.f, Vec2::ZERO, 0.f);
-        // 新增：JavaScript 狀態顯示
+
         if (g_v8Subsystem)
         {
             std::string jsStatus = g_v8Subsystem->IsInitialized() ? "JS:Initialized" : "JS:UnInitialized";
@@ -796,9 +792,6 @@ void Game::InitializeJavaScriptFramework()
 
         DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading InputSystem.js...");
         ExecuteJavaScriptFile("Data/Scripts/InputSystem.js");
-
-        // Hot-reload system is now implemented in C++ (FileWatcher + ScriptReloader)
-        // No longer need to load JavaScript hot-reload files
 
         DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading JSGame.js...");
         ExecuteJavaScriptFile("Data/Scripts/JSGame.js");

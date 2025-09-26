@@ -34,16 +34,15 @@ public:
     void RenderJS();
     bool IsAttractMode() const;
 
-    // 新增：JavaScript 相關功能
     void ExecuteJavaScriptCommand(String const& command);
     void ExecuteJavaScriptFile(String const& filename);
     void HandleJavaScriptCommands();
 
     // SCRIPT REGISTRY: Chrome DevTools selective integration
-    void ExecuteJavaScriptCommandForDebug(const std::string& command, const std::string& scriptName);
-    void ExecuteJavaScriptFileForDebug(const std::string& filename);
+    void ExecuteJavaScriptCommandForDebug(String const& command, String const& scriptName);
+    void ExecuteJavaScriptFileForDebug(String const& filename);
 
-    // 新增：JavaScript 回呼函數需要的遊戲功能
+    // JavaScript callback functions
     void    CreateCube(Vec3 const& position);
     void    MoveProp(int propIndex, Vec3 const& newPosition);
     void    MovePlayerCamera(Vec3 const& offset);
@@ -51,7 +50,7 @@ public:
     void    Update(float gameDeltaSeconds, float systemDeltaSeconds);
     void    Render();
 
-    // 新增：控制台命令處理
+
     void HandleConsoleCommands();
 
 private:
@@ -76,6 +75,6 @@ private:
     std::vector<Prop*> m_props;
     eGameState         m_gameState = eGameState::ATTRACT;
 
-    Vec3 m_originalPlayerPosition = Vec3(-2.f, 0.f, 1.f);  // 儲存原始位置
-    bool m_cameraShakeActive      = false;                        // 追蹤震動狀態
+    Vec3 m_originalPlayerPosition = Vec3(-2.f, 0.f, 1.f);
+    bool m_cameraShakeActive      = false;
 };
