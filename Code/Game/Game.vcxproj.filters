@@ -61,27 +61,21 @@
       <Filter>GameCore\GameLogic</Filter>
     </ClCompile>
     <!-- Framework Application Core -->
-    <!-- Framework V8 Integration -->
-    <!-- Framework Development Tools -->
-    <!-- Subsystems -->
     <ClCompile Include="Framework/App.cpp">
-      <Filter>GameCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Framework/FileWatcher.cpp">
-      <Filter>GameCore</Filter>
+      <Filter>Framework\ApplicationCore</Filter>
     </ClCompile>
     <ClCompile Include="Framework/GameCommon.cpp">
-      <Filter>GameCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Framework/GameScriptInterface.cpp">
-      <Filter>GameCore</Filter>
+      <Filter>Framework\ApplicationCore</Filter>
     </ClCompile>
     <ClCompile Include="Framework/Main_Windows.cpp">
-      <Filter>GameCore</Filter>
+      <Filter>Framework\ApplicationCore</Filter>
     </ClCompile>
-    <ClCompile Include="Framework/ScriptReloader.cpp">
-      <Filter>GameCore</Filter>
+    <!-- Framework V8 Integration -->
+    <ClCompile Include="Framework/GameScriptInterface.cpp">
+      <Filter>Framework\V8 Integration</Filter>
     </ClCompile>
+    <!-- Framework Development Tools -->
+    <!-- Subsystems -->
   </ItemGroup>
   <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
   <!-- HEADER FILE ORGANIZATION -->
@@ -102,18 +96,22 @@
       <Filter>GameCore\GameLogic</Filter>
     </ClInclude>
     <!-- Framework Application Core Headers -->
+    <ClInclude Include="Framework/App.hpp">
+      <Filter>Framework\ApplicationCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework/GameCommon.hpp">
+      <Filter>Framework\ApplicationCore</Filter>
+    </ClInclude>
     <!-- Framework V8 Integration Headers -->
+    <ClInclude Include="Framework/GameScriptInterface.hpp">
+      <Filter>Framework\V8 Integration</Filter>
+    </ClInclude>
     <!-- Framework Development Tools Headers -->
     <!-- Subsystems Headers -->
     <!-- Configuration Headers -->
     <ClInclude Include="EngineBuildPreferences.hpp">
       <Filter>Documentation\Configuration</Filter>
     </ClInclude>
-    <ClInclude Include="Framework/App.hpp" />
-    <ClInclude Include="Framework/FileWatcher.hpp" />
-    <ClInclude Include="Framework/GameCommon.hpp" />
-    <ClInclude Include="Framework/GameScriptInterface.hpp" />
-    <ClInclude Include="Framework/ScriptReloader.hpp" />
   </ItemGroup>
   <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
   <!-- DOCUMENTATION AND PROJECT FILES -->

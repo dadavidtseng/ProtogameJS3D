@@ -300,16 +300,12 @@
     <!-- Game Framework Layer -->
     <!-- Application entry point and main loop coordination -->
     <ClCompile Include="Framework/App.cpp" />
-    <!-- File system monitoring for hot-reload functionality -->
-    <ClCompile Include="Framework/FileWatcher.cpp" />
     <!-- Common game constants and utility functions -->
     <ClCompile Include="Framework/GameCommon.cpp" />
     <!-- C++ to JavaScript binding interface for game functionality -->
     <ClCompile Include="Framework/GameScriptInterface.cpp" />
     <!-- Windows platform entry point -->
     <ClCompile Include="Framework/Main_Windows.cpp" />
-    <!-- Script hot-reloading system for rapid development iteration -->
-    <ClCompile Include="Framework/ScriptReloader.cpp" />
     <!-- Game Subsystems -->
     <!-- Lighting subsystem for dynamic scene illumination -->
   </ItemGroup>
@@ -332,14 +328,10 @@
     <!-- Game Framework Layer Headers -->
     <!-- Application class coordinating engine and game systems -->
     <ClInclude Include="Framework/App.hpp" />
-    <!-- File monitoring for script hot-reload capability -->
-    <ClInclude Include="Framework/FileWatcher.hpp" />
     <!-- Game-wide constants and common functionality -->
     <ClInclude Include="Framework/GameCommon.hpp" />
     <!-- JavaScript integration interface exposing game functions to scripts -->
     <ClInclude Include="Framework/GameScriptInterface.hpp" />
-    <!-- Script reloading system for development workflow -->
-    <ClInclude Include="Framework/ScriptReloader.hpp" />
     <!-- Game Subsystems Headers -->
     <!-- Lighting subsystem for scene illumination management -->
   </ItemGroup>
