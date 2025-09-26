@@ -31,7 +31,7 @@ class JSGame {
 
         // Register C++ Bridge System (highest priority - must run first)
         this.engine.registerSystem('cppBridge', {
-            update: (deltaTime) => this.updateCppBridge(deltaTime),
+            update: (gameDeltaSeconds, systemDeltaSeconds) => this.updateCppBridge(gameDeltaSeconds, systemDeltaSeconds),
             render: () => this.renderCppBridge(),
             priority: 0,
             data: {description: 'C++ engine bridge system'}
@@ -39,7 +39,7 @@ class JSGame {
 
         // Register Input System (delegated to InputSystem.js for AI Agent separation)
         this.engine.registerSystem('inputHandler', {
-            update: (deltaTime) => this.updateInputHandler(deltaTime),
+            update: (gameDeltaSeconds, systemDeltaSeconds) => this.updateInputHandler(gameDeltaSeconds, systemDeltaSeconds),
             priority: 10,
             enabled: true,
             data: {
@@ -50,7 +50,7 @@ class JSGame {
         // Register Cube Spawner System
 
         this.engine.registerSystem('cubeSpawner', {
-            update: (deltaTime) => this.updateCubeSpawner(deltaTime),
+            update: (gameDeltaSeconds, systemDeltaSeconds) => this.updateCubeSpawner(gameDeltaSeconds, systemDeltaSeconds),
             priority: 20,
             data: {
                 description: 'Spawns cubes every 4 seconds',
@@ -61,7 +61,7 @@ class JSGame {
         // Register Prop Mover System
 
         this.engine.registerSystem('propMover', {
-            update: (deltaTime) => this.updatePropMover(deltaTime),
+            update: (gameDeltaSeconds, systemDeltaSeconds) => this.updatePropMover(gameDeltaSeconds, systemDeltaSeconds),
             priority: 30,
             data: {
                 description: 'Moves props every 2 seconds',
@@ -72,7 +72,7 @@ class JSGame {
 
         // Register Camera Shaker System
         this.engine.registerSystem('cameraShaker', {
-            update: (deltaTime) => this.updateCameraShaker(deltaTime),
+            update: (gameDeltaSeconds, systemDeltaSeconds) => this.updateCameraShaker(gameDeltaSeconds, systemDeltaSeconds),
             priority: 40,
             data: {
                 description: 'Shakes camera every 6 seconds',
@@ -131,13 +131,12 @@ class JSGame {
     /**
      * C++ Bridge System - maintains original functionality
      */
-    updateCppBridge(deltaTime) {
+    updateCppBridge(gameDeltaSeconds, systemDeltaSeconds) {
         this.frameCount++;
 
-        // Call C++ engine update through JSEngine (preserve original logic)
+        // Call C++ engine update through JSEngine with proper clock separation
         if (this.engine) {
-            const deltaSeconds = deltaTime / 1000.0;
-            this.engine.updateCppEngine(deltaSeconds, deltaSeconds);
+            this.engine.updateCppEngine(gameDeltaSeconds, systemDeltaSeconds);
         }
     }
 
@@ -153,14 +152,15 @@ class JSGame {
 
         // Call C++ engine render through JSEngine (preserve original logic)
         if (shouldRenderValue && this.engine) {
-            this.engine.renderCppEngine(0.0, 0.0);
+            this.engine.renderCppEngine();
         }
     }
 
     /**
      * Input Handler System - delegated to InputSystem.js for AI Agent file separation
+     * Uses systemDeltaSeconds so input continues working when game is paused
      */
-    updateInputHandler(deltaTime) {
+    updateInputHandler(gameDeltaSeconds, systemDeltaSeconds) {
         const system = this.engine.getSystem('inputHandler');
         if (!system) return;
 
@@ -173,7 +173,8 @@ class JSGame {
         }
 
         // Delegate input handling to InputSystem (AI Agent separation)
-        this.inputSystem.handleInput(deltaTime);
+        // Use systemDeltaSeconds so input works even when game clock is paused
+        this.inputSystem.handleInput(systemDeltaSeconds * 1000.0); // Convert back to milliseconds for InputSystem
 
         // Update system data from InputSystem for consistency
         system.data.lastF1State = this.inputSystem.getLastF1State();
@@ -181,8 +182,9 @@ class JSGame {
 
     /**
      * Cube Spawner System
+     * Uses gameDeltaSeconds so it pauses when game clock is paused
      */
-    updateCubeSpawner(deltaTime) {
+    updateCubeSpawner(gameDeltaSeconds, systemDeltaSeconds) {
         const system = this.engine.getSystem('cubeSpawner');
         if (!system) return;
 
@@ -194,8 +196,9 @@ class JSGame {
 
     /**
      * Prop Mover System
+     * Uses gameDeltaSeconds so it pauses when game clock is paused
      */
-    updatePropMover(deltaTime) {
+    updatePropMover(gameDeltaSeconds, systemDeltaSeconds) {
         const system = this.engine.getSystem('propMover');
         if (!system) return;
 
@@ -207,8 +210,9 @@ class JSGame {
 
     /**
      * Camera Shaker System
+     * Uses systemDeltaSeconds so camera shake continues even when game is paused
      */
-    updateCameraShaker(deltaTime) {
+    updateCameraShaker(gameDeltaSeconds, systemDeltaSeconds) {
         const system = this.engine.getSystem('cameraShaker');
         if (!system) return;
 
@@ -222,37 +226,37 @@ class JSGame {
      * Test methods to demonstrate the framework
      */
     testCreateCube() {
-        // if (this.engine) {
-        //     const x = (Math.random() - 0.5) * 10;
-        //     const y = (Math.random() - 0.5) * 10;
-        //     const z = Math.random() * 3;
-        //
-        //     this.engine.createCube(x, y, z);
-        //     console.log('JSGame: Test - Created random cube');
-        // }
+        if (this.engine) {
+            const x = (Math.random() - 0.5) * 10;
+            const y = (Math.random() - 0.5) * 10;
+            const z = Math.random() * 3;
+
+            this.engine.createCube(x, y, z);
+            console.log('JSGame: Test - Created random cube');
+        }
     }
 
     testMoveProp() {
-        // if (this.engine) {
-        //     const propIndex = 0; // Move the first prop
-        //     const x = (Math.random() - 0.5) * 8;
-        //     const y = (Math.random() - 0.5) * 8;
-        //     const z = Math.random() * 2;
-        //
-        //     this.engine.moveProp(propIndex, x, y, z);
-        //     console.log('JSGame: Test - Moved prop');
-        // }
+        if (this.engine) {
+            const propIndex = 0; // Move the first prop
+            const x = (Math.random() - 0.5) * 8;
+            const y = (Math.random() - 0.5) * 8;
+            const z = Math.random() * 2;
+
+            this.engine.moveProp(propIndex, x, y, z);
+            console.log('JSGame: Test - Moved prop');
+        }
     }
 
     testCameraShake() {
-        // if (this.engine) {
-        //     const shakeX = (Math.random() - 0.5) * 0.2;
-        //     const shakeY = (Math.random() - 0.5) * 0.2;
-        //     const shakeZ = (Math.random() - 0.5) * 0.1;
-        //
-        //     this.engine.moveCamera(shakeX, shakeY, shakeZ);
-        //     console.log('JSGame: Test - Camera shake');
-        // }
+        if (this.engine) {
+            const shakeX = (Math.random() - 0.5) * 0.2;
+            const shakeY = (Math.random() - 0.5) * 0.2;
+            const shakeZ = (Math.random() - 0.5) * 0.1;
+
+            this.engine.moveCamera(shakeX, shakeY, shakeZ);
+            console.log('JSGame: Test - Camera shake');
+        }
     }
 }
 

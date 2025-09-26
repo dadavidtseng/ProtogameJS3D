@@ -37,8 +37,8 @@ class InputSystem {
         this.logTimer += deltaTime;
 
         // Check if 0.5 seconds (500ms) have passed
-        if (this.logTimer >= 200) {
-            console.log('InputSystem HandleInput');
+        if (this.logTimer >= 300) {
+            console.log('MODIFY InputSystem HandleInput');
             this.logTimer = 0; // Reset timer
         }
 

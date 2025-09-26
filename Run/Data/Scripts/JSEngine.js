@@ -36,7 +36,7 @@ class JSEngine {
     // }
 
     /**
-     * Initialize the hot-reload system - now handled by C++ 
+     * Initialize the hot-reload system - now handled by C++
      */
     // initializeHotReloadSystem() {
     //     try {
@@ -193,7 +193,7 @@ class JSEngine {
      * Update method - called by C++ engine
      * Now processes both game and registered systems
      */
-    update(deltaTime) {
+    update(gameDeltaSeconds, systemDeltaSeconds) {
         if (!this.isInitialized) {
             return;
         }
@@ -205,7 +205,8 @@ class JSEngine {
         for (const system of this.updateSystems) {
             if (system.enabled && system.update) {
                 try {
-                    system.update(deltaTime);
+                    // Pass both gameDeltaSeconds and systemDeltaSeconds to allow systems to choose
+                    system.update(gameDeltaSeconds, systemDeltaSeconds);
                 } catch (error) {
                     console.log(`JSEngine: Error in system '${system.id}' update:`, error);
                 }
@@ -248,9 +249,9 @@ class JSEngine {
         return false;
     }
 
-    renderCppEngine(gameDeltaSeconds, systemDeltaSeconds) {
+    renderCppEngine() {
         if (typeof game !== 'undefined' && game.render) {
-            game.render(gameDeltaSeconds || 0.0, systemDeltaSeconds || 0.0);
+            game.render();
             return true;
         }
         console.warn('JSEngine: C++ game.render not available');
