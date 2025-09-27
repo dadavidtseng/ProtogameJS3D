@@ -15,7 +15,7 @@ class Game;
 class RandomNumberGenerator;
 class Renderer;
 class ResourceSubsystem;
-class V8Subsystem;
+class ScriptSubsystem;
 
 // one-time declaration
 extern App*                   g_app;
@@ -25,7 +25,7 @@ extern Game*                  g_game;
 extern RandomNumberGenerator* g_rng;
 extern Renderer*              g_renderer;
 extern ResourceSubsystem*     g_resourceSubsystem;
-extern V8Subsystem*           g_v8Subsystem;
+extern ScriptSubsystem*       g_scriptSubsystem;
 
 //-----------------------------------------------------------------------------------------------
 // DebugRender-related
