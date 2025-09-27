@@ -20,8 +20,7 @@
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Resource/ResourceSubsystem.hpp"
-#include "Engine/Scripting/HotReloadSubsystem.hpp"
-#include "Engine/Scripting/V8Subsystem.hpp"
+#include "Engine/Scripting/ScriptSubsystem.hpp"
 #include "Game/Game.hpp"
 #include "Game/Framework/GameCommon.hpp"
 
@@ -30,12 +29,11 @@ App*                   g_app               = nullptr;       // Created and owned
 AudioSystem*           g_audio             = nullptr;       // Created and owned by the App
 BitmapFont*            g_bitmapFont        = nullptr;       // Created and owned by the App
 Game*                  g_game              = nullptr;       // Created and owned by the App
-HotReloadSubsystem*    g_hotReloadSubsystem = nullptr;       // Created and owned by the App (development builds)
 Renderer*              g_renderer          = nullptr;       // Created and owned by the App
 RandomNumberGenerator* g_rng               = nullptr;       // Created and owned by the App
 Window*                g_window            = nullptr;       // Created and owned by the App
 ResourceSubsystem*     g_resourceSubsystem = nullptr;       // Created and owned by the App
-V8Subsystem*           g_v8Subsystem       = nullptr;
+ScriptSubsystem*       g_scriptSubsystem   = nullptr;       // Created and owned by the App
 
 //----------------------------------------------------------------------------------------------------
 STATIC bool App::m_isQuitting = false;
@@ -161,20 +159,21 @@ void App::Startup()
 
     //-End-of-ResourceSubsystem-----------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------
-    //-Start-of-V8Subsystem---------------------------------------------------------------------------
+    //-Start-of-ScriptSubsystem-----------------------------------------------------------------------
 
-    sV8SubsystemConfig v8Config;
-    v8Config.enableDebugging     = true;
-    v8Config.heapSizeLimit       = 256;
-    v8Config.enableConsoleOutput = true;
+    sScriptSubsystemConfig scriptConfig;
+    scriptConfig.enableDebugging     = true;
+    scriptConfig.heapSizeLimit       = 256;
+    scriptConfig.enableConsoleOutput = true;
+    scriptConfig.enableHotReload     = true;
     // Chrome DevTools Inspector Configuration
-    v8Config.enableInspector = true;  // Enable Chrome DevTools integration
-    v8Config.inspectorPort   = 9229;  // Chrome DevTools connection port
-    v8Config.inspectorHost   = "127.0.0.1"; // Inspector server bind address
-    v8Config.waitForDebugger = false; // Don't pause execution waiting for debugger
-    g_v8Subsystem            = new V8Subsystem(v8Config);
+    scriptConfig.enableInspector = true;  // Enable Chrome DevTools integration
+    scriptConfig.inspectorPort   = 9229;  // Chrome DevTools connection port
+    scriptConfig.inspectorHost   = "127.0.0.1"; // Inspector server bind address
+    scriptConfig.waitForDebugger = false; // Don't pause execution waiting for debugger
+    g_scriptSubsystem            = new ScriptSubsystem(scriptConfig);
 
-    //-End-of-V8Subsystem-----------------------------------------------------------------------------
+    //-End-of-ScriptSubsystem-------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------
 
     g_logSubsystem->Startup();
@@ -186,7 +185,7 @@ void App::Startup()
     g_input->Startup();
     g_audio->Startup();
     g_resourceSubsystem->Startup();
-    g_v8Subsystem->Startup();
+    g_scriptSubsystem->Startup();
 
     g_logSubsystem->RegisterCategory("LogApp", eLogVerbosity::Log, eLogVerbosity::All);
     g_logSubsystem->RegisterCategory("LogGame", eLogVerbosity::Log, eLogVerbosity::All);
@@ -204,20 +203,20 @@ void App::Startup()
 void App::Shutdown()
 {
     // Shutdown hot-reload system first
-    if (g_hotReloadSubsystem)
+    if (g_scriptSubsystem)
     {
-        g_hotReloadSubsystem->Shutdown();
-        delete g_hotReloadSubsystem;
-        g_hotReloadSubsystem = nullptr;
+        g_scriptSubsystem->Shutdown();
+        delete g_scriptSubsystem;
+        g_scriptSubsystem = nullptr;
     }
 
     // 在其他清理程式碼之前新增：
     if (m_gameScriptInterface)
     {
-        if (g_v8Subsystem)
-        {
-            g_v8Subsystem->UnregisterScriptableObject("game");
-        }
+        // if (g_v8Subsystem)
+        // {
+        //     g_v8Subsystem->UnregisterScriptableObject("game");
+        // }
         m_gameScriptInterface.reset();
     }
 
@@ -226,7 +225,6 @@ void App::Shutdown()
     GAME_SAFE_RELEASE(g_rng);
     GAME_SAFE_RELEASE(g_bitmapFont);
 
-    g_v8Subsystem->Shutdown();
     g_audio->Shutdown();
     g_input->Shutdown();
     g_devConsole->Shutdown();
@@ -238,7 +236,6 @@ void App::Shutdown()
     g_window->Shutdown();
     g_eventSystem->Shutdown();
 
-    GAME_SAFE_RELEASE(g_v8Subsystem);
     GAME_SAFE_RELEASE(g_audio);
     GAME_SAFE_RELEASE(g_renderer);
     GAME_SAFE_RELEASE(g_window);
@@ -302,9 +299,9 @@ void App::Update()
     UpdateCursorMode();
 
     // Process pending hot-reload events on main thread (V8-safe)
-    if (g_hotReloadSubsystem)
+    if (g_scriptSubsystem)
     {
-        g_hotReloadSubsystem->Update();
+        g_scriptSubsystem->Update();
     }
 
     g_game->UpdateJS();
@@ -384,9 +381,9 @@ std::any App::OnDebug(std::vector<std::any> const& args)
 std::any App::OnGarbageCollection(std::vector<std::any> const& args)
 {
     UNUSED(args)
-    if (g_v8Subsystem)
+    if (g_scriptSubsystem)
     {
-        g_v8Subsystem->ForceGarbageCollection();
+        g_scriptSubsystem->ForceGarbageCollection();
         DebuggerPrintf("JS: 垃圾回收已執行\n");
     }
     return std::any{};
@@ -410,16 +407,15 @@ void App::UpdateCursorMode()
 
 void App::SetupScriptingBindings()
 {
-    if (g_v8Subsystem == nullptr)ERROR_AND_DIE(StringFormat("(App::SetupScriptingBindings)(g_v8Subsystem is nullptr!"))
-    if (!g_v8Subsystem->IsInitialized())ERROR_AND_DIE(StringFormat("(App::SetupScriptingBindings)(g_v8Subsystem is not initialized!"))
+    if (g_scriptSubsystem == nullptr)ERROR_AND_DIE(StringFormat("(App::SetupScriptingBindings)(g_scriptSubsystem is nullptr!"))
+    if (!g_scriptSubsystem->IsInitialized())ERROR_AND_DIE(StringFormat("(App::SetupScriptingBindings)(g_scriptSubsystem is not initialized!"))
     if (g_game == nullptr)ERROR_AND_DIE(StringFormat("(App::SetupScriptingBindings)(g_game is nullptr"))
 
     DAEMON_LOG(LogScript, eLogVerbosity::Log, StringFormat("(App::SetupScriptingBindings)(start)"));
 
-    // Initialize HotReloadSubsystem first (development builds only)
-    g_hotReloadSubsystem = new HotReloadSubsystem();
+    // Initialize hot-reload system (now integrated into ScriptSubsystem)
     std::string projectRoot = "C:/p4/Personal/SD/ProtogameJS3D/";
-    if (g_hotReloadSubsystem->Initialize(g_v8Subsystem, projectRoot))
+    if (g_scriptSubsystem->InitializeHotReload(projectRoot))
     {
         DAEMON_LOG(LogScript, eLogVerbosity::Log, StringFormat("(App::SetupScriptingBindings) Hot-reload system initialized successfully"));
     }
@@ -429,14 +425,14 @@ void App::SetupScriptingBindings()
     }
 
     m_gameScriptInterface = std::make_shared<GameScriptInterface>(g_game);
-    g_v8Subsystem->RegisterScriptableObject("game", m_gameScriptInterface);
+    g_scriptSubsystem->RegisterScriptableObject("game", m_gameScriptInterface);
 
     m_inputScriptInterface = std::make_shared<InputScriptInterface>(g_input);
-    g_v8Subsystem->RegisterScriptableObject("input", m_inputScriptInterface);
+    g_scriptSubsystem->RegisterScriptableObject("input", m_inputScriptInterface);
 
-    g_v8Subsystem->RegisterGlobalFunction("print", OnPrint);
-    g_v8Subsystem->RegisterGlobalFunction("debug", OnDebug);
-    g_v8Subsystem->RegisterGlobalFunction("gc", OnGarbageCollection);
+    g_scriptSubsystem->RegisterGlobalFunction("print", OnPrint);
+    g_scriptSubsystem->RegisterGlobalFunction("debug", OnDebug);
+    g_scriptSubsystem->RegisterGlobalFunction("gc", OnGarbageCollection);
 
     DAEMON_LOG(LogScript, eLogVerbosity::Log, StringFormat("(App::SetupScriptingBindings)(end)"));
 }
