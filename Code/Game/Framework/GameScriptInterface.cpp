@@ -17,7 +17,7 @@
 #include "Engine/Core/LogSubsystem.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/Vec3.hpp"
-#include "Engine/Scripting/V8Subsystem.hpp"
+#include "Engine/Scripting/ScriptSubsystem.hpp"
 #include "Engine/Scripting/ScriptTypeExtractor.hpp"
 #include "Game/Game.hpp"
 #include "Game/Player.hpp"
