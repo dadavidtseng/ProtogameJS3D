@@ -17,7 +17,7 @@
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Resource/ResourceSubsystem.hpp"
-#include "Engine/Scripting/V8Subsystem.hpp"
+#include "Engine/Scripting/ScriptSubsystem.hpp"
 #include "Game/Player.hpp"
 #include "Game/Prop.hpp"
 #include "Game/Framework/App.hpp"
@@ -88,7 +88,7 @@ void Game::UpdateJS()
 {
     // Temporarily disable JavaScript calls to test for buffer overrun
     // Update JavaScript framework - this will call the actual C++ Update(float,float)
-    if (  g_v8Subsystem && g_v8Subsystem->IsInitialized())
+    if (  g_scriptSubsystem && g_scriptSubsystem->IsInitialized())
     {
         float const gameDeltaSeconds   = static_cast<float>(m_gameClock->GetDeltaSeconds());
         float const systemDeltaSeconds = static_cast<float>(Clock::GetSystemClock().GetDeltaSeconds());
@@ -111,7 +111,7 @@ void Game::RenderJS()
 {
     // Temporarily disable JavaScript calls to test for buffer overrun
     // Render JavaScript framework - this will call the actual C++ Render(float,float)
-    if ( g_v8Subsystem && g_v8Subsystem->IsInitialized())
+    if ( g_scriptSubsystem && g_scriptSubsystem->IsInitialized())
     {
         ExecuteJavaScriptCommand(StringFormat("globalThis.JSEngine.render();"));
     }
@@ -401,23 +401,23 @@ void Game::ExecuteJavaScriptCommand(String const& command)
 {
     // DAEMON_LOG(LogGame, eLogVerbosity::Log, Stringf("Game::ExecuteJavaScriptCommand() start | %s", command.c_str()));
 
-    if (g_v8Subsystem == nullptr)
+    if (g_scriptSubsystem == nullptr)
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("(Game::ExecuteJavaScriptCommand)(failed)(g_v8Subsystem is nullptr!)"));
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("(Game::ExecuteJavaScriptCommand)(failed)(g_scriptSubsystem is nullptr!)"));
         return;
     }
 
-    if (!g_v8Subsystem->IsInitialized())
+    if (!g_scriptSubsystem->IsInitialized())
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("(Game::ExecuteJavaScriptCommand) failed| %s | V8Subsystem is not initialized", command.c_str()));
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("(Game::ExecuteJavaScriptCommand) failed| %s | ScriptSubsystem is not initialized", command.c_str()));
         return;
     }
 
-    bool const success = g_v8Subsystem->ExecuteScript(command);
+    bool const success = g_scriptSubsystem->ExecuteScript(command);
 
     if (success)
     {
-        String const result = g_v8Subsystem->GetLastResult();
+        String const result = g_scriptSubsystem->GetLastResult();
 
         if (!result.empty())
         {
@@ -428,9 +428,9 @@ void Game::ExecuteJavaScriptCommand(String const& command)
     {
         DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommand() failed"));
 
-        if (g_v8Subsystem->HasError())
+        if (g_scriptSubsystem->HasError())
         {
-            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommand() error | %s", g_v8Subsystem->GetLastError().c_str()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommand() error | %s", g_scriptSubsystem->GetLastError().c_str()));
         }
     }
 
@@ -443,24 +443,24 @@ void Game::ExecuteJavaScriptCommandForDebug(String const& command, String const&
     // Execute JavaScript command with Chrome DevTools integration for debugging
     // This method registers the script so it appears in DevTools Sources panel
 
-    if (g_v8Subsystem == nullptr)
+    if (g_scriptSubsystem == nullptr)
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() failed| %s | V8Subsystem is nullptr", command.c_str()));
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() failed| %s | ScriptSubsystem is nullptr", command.c_str()));
         return;
     }
 
-    if (!g_v8Subsystem->IsInitialized())
+    if (!g_scriptSubsystem->IsInitialized())
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() failed| %s | V8Subsystem is not initialized", command.c_str()));
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() failed| %s | ScriptSubsystem is not initialized", command.c_str()));
         return;
     }
 
     // Use the registered script execution method for Chrome DevTools debugging
-    bool const success = g_v8Subsystem->ExecuteRegisteredScript(command, scriptName);
+    bool const success = g_scriptSubsystem->ExecuteRegisteredScript(command, scriptName);
 
     if (success)
     {
-        String const result = g_v8Subsystem->GetLastResult();
+        String const result = g_scriptSubsystem->GetLastResult();
 
         if (!result.empty())
         {
@@ -471,9 +471,9 @@ void Game::ExecuteJavaScriptCommandForDebug(String const& command, String const&
     {
         DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() failed"));
 
-        if (g_v8Subsystem->HasError())
+        if (g_scriptSubsystem->HasError())
         {
-            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() error | %s", g_v8Subsystem->GetLastError().c_str()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptCommandForDebug() error | %s", g_scriptSubsystem->GetLastError().c_str()));
         }
     }
 }
@@ -484,15 +484,15 @@ void Game::ExecuteJavaScriptFileForDebug(String const& filename)
     // Load JavaScript file and execute it with Chrome DevTools integration for debugging
     // This method reads a script file and registers it so it appears in DevTools Sources panel
 
-    if (g_v8Subsystem == nullptr)
+    if (g_scriptSubsystem == nullptr)
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() failed| %s | V8Subsystem is nullptr", filename.c_str()));
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() failed| %s | ScriptSubsystem is nullptr", filename.c_str()));
         return;
     }
 
-    if (!g_v8Subsystem->IsInitialized())
+    if (!g_scriptSubsystem->IsInitialized())
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() failed| %s | V8Subsystem is not initialized", filename.c_str()));
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() failed| %s | ScriptSubsystem is not initialized", filename.c_str()));
         return;
     }
 
@@ -528,11 +528,11 @@ void Game::ExecuteJavaScriptFileForDebug(String const& filename)
     DAEMON_LOG(LogGame, eLogVerbosity::Display, Stringf("Game::ExecuteJavaScriptFileForDebug() executing %s for Chrome DevTools debugging", filename.c_str()));
 
     // Use the registered script execution method for Chrome DevTools debugging
-    bool const success = g_v8Subsystem->ExecuteRegisteredScript(scriptContent, scriptName);
+    bool const success = g_scriptSubsystem->ExecuteRegisteredScript(scriptContent, scriptName);
 
     if (success)
     {
-        String const result = g_v8Subsystem->GetLastResult();
+        String const result = g_scriptSubsystem->GetLastResult();
 
         if (!result.empty())
         {
@@ -543,9 +543,9 @@ void Game::ExecuteJavaScriptFileForDebug(String const& filename)
     {
         DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() failed"));
 
-        if (g_v8Subsystem->HasError())
+        if (g_scriptSubsystem->HasError())
         {
-            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() error | %s", g_v8Subsystem->GetLastError().c_str()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Game::ExecuteJavaScriptFileForDebug() error | %s", g_scriptSubsystem->GetLastError().c_str()));
         }
     }
 }
@@ -553,20 +553,20 @@ void Game::ExecuteJavaScriptFileForDebug(String const& filename)
 //----------------------------------------------------------------------------------------------------
 void Game::ExecuteJavaScriptFile(String const& filename)
 {
-    if (g_v8Subsystem == nullptr)ERROR_AND_DIE(StringFormat("(Game::ExecuteJavaScriptFile)(g_v8Subsystem is nullptr!)"))
-    if (!g_v8Subsystem->IsInitialized())ERROR_AND_DIE(StringFormat("(Game::ExecuteJavaScriptFile)(g_v8Subsystem is not initialized!)"))
+    if (g_scriptSubsystem == nullptr)ERROR_AND_DIE(StringFormat("(Game::ExecuteJavaScriptFile)(g_scriptSubsystem is nullptr!)"))
+    if (!g_scriptSubsystem->IsInitialized())ERROR_AND_DIE(StringFormat("(Game::ExecuteJavaScriptFile)(g_scriptSubsystem is not initialized!)"))
 
     DAEMON_LOG(LogGame, eLogVerbosity::Log, StringFormat("(Game::ExecuteJavaScriptFile)(start)({})", filename));
 
-    bool const success = g_v8Subsystem->ExecuteScriptFile(filename);
+    bool const success = g_scriptSubsystem->ExecuteScriptFile(filename);
 
     if (!success)
     {
         DAEMON_LOG(LogGame, eLogVerbosity::Error, StringFormat("(Game::ExecuteJavaScriptFile)(fail)({})", filename));
 
-        if (g_v8Subsystem->HasError())
+        if (g_scriptSubsystem->HasError())
         {
-            DAEMON_LOG(LogGame, eLogVerbosity::Error, StringFormat("(Game::ExecuteJavaScriptFile)(fail)(error: {})", g_v8Subsystem->GetLastError()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, StringFormat("(Game::ExecuteJavaScriptFile)(fail)(error: {})", g_scriptSubsystem->GetLastError()));
         }
 
         return;
@@ -687,14 +687,14 @@ void Game::Render()
         DebugAddScreenText(Stringf("WindowPosition=(%.1f,%.1f)", windowPosition.x, windowPosition.y), Vec2(0, 60), 20.f, Vec2::ZERO, 0.f);
         DebugAddScreenText(Stringf("ClientPosition=(%.1f,%.1f)", clientPosition.x, clientPosition.y), Vec2(0, 80), 20.f, Vec2::ZERO, 0.f);
 
-        if (g_v8Subsystem)
+        if (g_scriptSubsystem)
         {
-            std::string jsStatus = g_v8Subsystem->IsInitialized() ? "JS:Initialized" : "JS:UnInitialized";
+            std::string jsStatus = g_scriptSubsystem->IsInitialized() ? "JS:Initialized" : "JS:UnInitialized";
             DebugAddScreenText(jsStatus, Vec2(0, 100), 20.f, Vec2::ZERO, 0.f);
 
-            if (g_v8Subsystem->HasError())
+            if (g_scriptSubsystem->HasError())
             {
-                DebugAddScreenText("JS錯誤: " + g_v8Subsystem->GetLastError(), Vec2(0, 120), 15.f, Vec2::ZERO, 0.f, Rgba8::RED);
+                DebugAddScreenText("JS錯誤: " + g_scriptSubsystem->GetLastError(), Vec2(0, 120), 15.f, Vec2::ZERO, 0.f, Rgba8::RED);
             }
         }
     }
@@ -778,9 +778,9 @@ void Game::InitializeJavaScriptFramework()
 {
     DAEMON_LOG(LogGame, eLogVerbosity::Display, "Game::InitializeJavaScriptFramework() start");
 
-    if (!g_v8Subsystem || !g_v8Subsystem->IsInitialized())
+    if (!g_scriptSubsystem || !g_scriptSubsystem->IsInitialized())
     {
-        DAEMON_LOG(LogGame, eLogVerbosity::Error, "Game::InitializeJavaScriptFramework() failed - V8 not available");
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "Game::InitializeJavaScriptFramework() failed - ScriptSubsystem not available");
         return;
     }
 
