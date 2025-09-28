@@ -32,6 +32,7 @@ public:
     void PostInit();
     void UpdateJS();
     void RenderJS();
+
     bool IsAttractMode() const;
 
     void ExecuteJavaScriptCommand(String const& command);
@@ -43,12 +44,14 @@ public:
     void ExecuteJavaScriptFileForDebug(String const& filename);
 
     // JavaScript callback functions
-    void    CreateCube(Vec3 const& position);
-    void    MoveProp(int propIndex, Vec3 const& newPosition);
-    void    MovePlayerCamera(Vec3 const& offset);
-    Player* GetPlayer();
-    void    Update(float gameDeltaSeconds, float systemDeltaSeconds);
-    void    Render();
+    eGameState GetGameState() const;
+    void       SetGameState(eGameState newState);
+    void       CreateCube(Vec3 const& position);
+    void       MoveProp(int propIndex, Vec3 const& newPosition);
+    void       MovePlayerCamera(Vec3 const& offset);
+    Player*    GetPlayer();
+    void       Update(float gameDeltaSeconds, float systemDeltaSeconds);
+    void       Render();
 
 
     void HandleConsoleCommands();

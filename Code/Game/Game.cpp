@@ -60,6 +60,8 @@ Game::Game()
     DebugAddWorldText("Z-Up", transform, 0.25f, Vec2(1.f, 0.f), -1.f, Rgba8::BLUE);
 
     DAEMON_LOG(LogGame, eLogVerbosity::Log, "(Game::Game)(end)");
+
+    ExecuteJavaScriptFile("Data/Scripts/test_scripts.js");
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -88,7 +90,7 @@ void Game::UpdateJS()
 {
     // Temporarily disable JavaScript calls to test for buffer overrun
     // Update JavaScript framework - this will call the actual C++ Update(float,float)
-    if (  g_scriptSubsystem && g_scriptSubsystem->IsInitialized())
+    if (g_scriptSubsystem && g_scriptSubsystem->IsInitialized())
     {
         float const gameDeltaSeconds   = static_cast<float>(m_gameClock->GetDeltaSeconds());
         float const systemDeltaSeconds = static_cast<float>(Clock::GetSystemClock().GetDeltaSeconds());
@@ -111,7 +113,7 @@ void Game::RenderJS()
 {
     // Temporarily disable JavaScript calls to test for buffer overrun
     // Render JavaScript framework - this will call the actual C++ Render(float,float)
-    if ( g_scriptSubsystem && g_scriptSubsystem->IsInitialized())
+    if (g_scriptSubsystem && g_scriptSubsystem->IsInitialized())
     {
         ExecuteJavaScriptCommand(StringFormat("globalThis.JSEngine.render();"));
     }
@@ -135,23 +137,19 @@ void Game::UpdateFromKeyBoard()
 {
     if (m_gameState == eGameState::ATTRACT)
     {
+        // if (g_input->WasKeyJustPressed(KEYCODE_SPACE))
+        // {
+        //     m_gameState = eGameState::GAME;
+        // }
+
         if (g_input->WasKeyJustPressed(KEYCODE_ESC))
         {
             App::RequestQuit();
-        }
-
-        if (g_input->WasKeyJustPressed(KEYCODE_SPACE))
-        {
-            m_gameState = eGameState::GAME;
         }
     }
 
     if (m_gameState == eGameState::GAME)
     {
-        if (g_input->WasKeyJustPressed(KEYCODE_G))
-        {
-            DAEMON_LOG(LogTemp, eLogVerbosity::Warning, "G");
-        }
         if (g_input->WasKeyJustPressed(KEYCODE_ESC))
         {
             m_gameState = eGameState::ATTRACT;
@@ -550,6 +548,16 @@ void Game::ExecuteJavaScriptFileForDebug(String const& filename)
     }
 }
 
+eGameState Game::GetGameState() const
+{
+    return m_gameState;
+}
+
+void Game::SetGameState(eGameState const newState)
+{
+    m_gameState = newState;
+}
+
 //----------------------------------------------------------------------------------------------------
 void Game::ExecuteJavaScriptFile(String const& filename)
 {
@@ -582,7 +590,7 @@ void Game::HandleJavaScriptCommands()
     // 這裡可以加入定期檢查 JavaScript 指令的邏輯
 
     // 範例：檢查特定按鍵來執行預設腳本
-    if (g_input->WasKeyJustPressed('J'))
+    if (g_input->WasKeyJustPressed(KEYCODE_J))
     {
         // ExecuteJavaScriptCommand("console.log('J 鍵觸發的 JavaScript!');");
         ExecuteJavaScriptFile("Data/Scripts/test_scripts.js");

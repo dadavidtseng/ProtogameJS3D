@@ -48,6 +48,16 @@ std::string GameScriptInterface::GetScriptObjectName() const
 std::vector<ScriptMethodInfo> GameScriptInterface::GetAvailableMethods() const
 {
     return {
+        ScriptMethodInfo("getGameState",
+                         "Get current game state",
+                         {},
+                         "string"),
+
+        ScriptMethodInfo("setGameState",
+                         "Set current game state",
+                         {},
+                         "void"),
+
         ScriptMethodInfo("createCube",
                          "在指定位置創建一個立方體",
                          {"float", "float", "float"},
@@ -120,6 +130,15 @@ ScriptMethodResult GameScriptInterface::CallMethod(std::string const&           
 {
     try
     {
+        if (methodName == "getGameState")
+        {
+            return ExecuteGetGameState(args);
+        }
+        else if (methodName == "setGameState")
+        {
+            return ExecuteSetGameState(args);
+        }
+
         if (methodName == "createCube")
         {
             return ExecuteCreateCube(args);
@@ -156,14 +175,6 @@ ScriptMethodResult GameScriptInterface::CallMethod(std::string const&           
         {
             return ExecuteIsAttractMode(args);
         }
-        else if (methodName == "getGameState")
-        {
-            return ExecuteGetGameState(args);
-        }
-        else if (methodName == "getFileTimestamp")
-        {
-            return ExecuteGetFileTimestamp(args);
-        }
 
         return ScriptMethodResult::Error("未知的方法: " + methodName);
     }
@@ -196,6 +207,74 @@ bool GameScriptInterface::SetProperty(const std::string& propertyName, const std
     UNUSED(propertyName);
     UNUSED(value);
     return false;
+}
+
+//----------------------------------------------------------------------------------------------------
+ScriptMethodResult GameScriptInterface::ExecuteGetGameState(const std::vector<std::any>& args)
+{
+    auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "getGameState");
+
+    if (!result.success) return result;
+
+    try
+    {
+        eGameState state = m_game->GetGameState();
+        
+        // Convert enum to string for JavaScript
+        std::string stateStr;
+        switch (state)
+        {
+            case eGameState::ATTRACT:
+                stateStr = "ATTRACT";
+                break;
+            case eGameState::GAME:
+                stateStr = "GAME";
+                break;
+            default:
+                stateStr = "UNKNOWN";
+                break;
+        }
+        
+        return ScriptMethodResult::Success(stateStr);
+    }
+    catch (const std::exception& e)
+    {
+        return ScriptMethodResult::Error("取得遊戲狀態失敗: " + std::string(e.what()));
+    }
+}
+
+ScriptMethodResult GameScriptInterface::ExecuteSetGameState(const std::vector<std::any>& args)
+{
+    auto result = ScriptTypeExtractor::ValidateArgCount(args, 1, "setGameState");
+
+    if (!result.success) return result;
+
+    try
+    {
+        std::string stateStr = ScriptTypeExtractor::ExtractString(args[0]);
+        
+        // Convert string to enum
+        eGameState newState;
+        if (stateStr == "ATTRACT" || stateStr == "attract" || stateStr == "0")
+        {
+            newState = eGameState::ATTRACT;
+        }
+        else if (stateStr == "GAME" || stateStr == "game" || stateStr == "1")
+        {
+            newState = eGameState::GAME;
+        }
+        else
+        {
+            return ScriptMethodResult::Error("無效的遊戲狀態: " + stateStr + " (有效值: ATTRACT, GAME, 0, 1)");
+        }
+        
+        m_game->SetGameState(newState);
+        return ScriptMethodResult::Success("遊戲狀態已設定為: " + stateStr);
+    }
+    catch (const std::exception& e)
+    {
+        return ScriptMethodResult::Error("設定遊戲狀態失敗: " + std::string(e.what()));
+    }
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -261,8 +340,8 @@ ScriptMethodResult GameScriptInterface::ExecuteGetPlayerPosition(const std::vect
 
         // 回傳一個可以被 JavaScript 使用的物件
         std::string positionStr = "{ x: " + std::to_string(position.x) +
-        ", y: " + std::to_string(position.y) +
-        ", z: " + std::to_string(position.z) + " }";
+            ", y: " + std::to_string(position.y) +
+            ", z: " + std::to_string(position.z) + " }";
 
         return ScriptMethodResult::Success(positionStr);
     }
@@ -378,62 +457,5 @@ ScriptMethodResult GameScriptInterface::ExecuteIsAttractMode(const std::vector<s
     catch (std::exception const& e)
     {
         return ScriptMethodResult::Error("檢查吸引模式失敗: " + std::string(e.what()));
-    }
-}
-
-//----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteGetGameState(const std::vector<std::any>& args)
-{
-    auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "getGameState");
-    if (!result.success) return result;
-
-    try
-    {
-        std::string state = m_game->IsAttractMode() ? "attract" : "game";
-        return ScriptMethodResult::Success(state);
-    }
-    catch (const std::exception& e)
-    {
-        return ScriptMethodResult::Error("取得遊戲狀態失敗: " + std::string(e.what()));
-    }
-}
-
-//----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteGetFileTimestamp(const std::vector<std::any>& args)
-{
-    auto result = ScriptTypeExtractor::ValidateArgCount(args, 1, "getFileTimestamp");
-    if (!result.success) return result;
-
-    try
-    {
-        std::string filePath = ScriptTypeExtractor::ExtractString(args[0]);
-
-        // The filePath comes from HotReloader as 'Data/Scripts/filename.js'
-        // Build absolute path from the known project structure
-        std::string projectRoot = "C:/p4/Personal/SD/ProtogameJS3D/";
-        std::string fullPath    = projectRoot + "Run/" + filePath;
-
-        // Debug: Log the paths being used
-        DebuggerPrintf("getFileTimestamp: Input path = %s\n", filePath.c_str());
-        DebuggerPrintf("getFileTimestamp: Full path = %s\n", fullPath.c_str());
-
-        // Get file timestamp using standard library
-        if (std::filesystem::exists(fullPath))
-        {
-            auto ftime = std::filesystem::last_write_time(fullPath);
-            auto sctp  = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
-                ftime - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
-            auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(sctp.time_since_epoch()).count();
-
-            return ScriptMethodResult::Success(static_cast<double>(timestamp));
-        }
-        else
-        {
-            return ScriptMethodResult::Error("檔案不存在: " + filePath);
-        }
-    }
-    catch (const std::exception& e)
-    {
-        return ScriptMethodResult::Error("取得檔案時間戳記失敗: " + std::string(e.what()));
     }
 }

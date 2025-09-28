@@ -18,12 +18,14 @@
 class InputSystem {
     constructor() {
         this.lastF1State = false;
+        this.lastSpaceState = false; // Track spacebar for game state transitions
         console.log('CONSTRUCTOR: InputSystem created at', Date.now());
     }
 
     /**
      * Core input logic extracted from JSGame.js updateInputHandler method
      * Handles F1 key detection and shouldRender toggle functionality
+     * Now also handles keyboard-based game state transitions (extracted from C++ Game::UpdateFromKeyBoard)
      *
      * @param {number} deltaTime - Frame delta time from JSGame
      */
@@ -42,7 +44,20 @@ class InputSystem {
             this.logTimer = 0; // Reset timer
         }
 
-        let currentF1State = true;
+        // Handle F1 key (shouldRender toggle)
+        this.handleF1Key();
+        
+        // Handle keyboard-based game state transitions (extracted from C++ Game::UpdateFromKeyBoard)
+        this.handleKeyboardGameState();
+    }
+
+    /**
+     * Handle F1 key for shouldRender toggle
+     */
+    handleF1Key() {
+        let currentF1State = false;
+        
+        // Try legacy input API (C++ InputScriptInterface)
         if (typeof input !== 'undefined' && input.wasKeyJustPressed) {
             currentF1State = input.wasKeyJustPressed(112); // F1 key code
         }
@@ -65,6 +80,51 @@ class InputSystem {
     }
 
     /**
+     * Handle keyboard-based game state transitions (extracted from C++ Game::UpdateFromKeyBoard)
+     * Original C++ logic:
+     * if (m_gameState == eGameState::ATTRACT) {
+     *     if (g_input->WasKeyJustPressed(KEYCODE_SPACE)) {
+     *         m_gameState = eGameState::GAME;
+     *     }
+     * }
+     */
+    handleKeyboardGameState() {
+        let currentSpaceState = false;
+        
+        // Check spacebar state using C++ input system
+        if (typeof input !== 'undefined' && input.wasKeyJustPressed) {
+            currentSpaceState = input.wasKeyJustPressed(32); // Spacebar key code
+        }
+
+        // Edge detection for spacebar press
+        if (currentSpaceState && !this.lastSpaceState) {
+            // Check if game object is available and get current game state
+            if (typeof game !== 'undefined' && game.getGameState) {
+                const currentGameState = game.getGameState();
+                
+                // If in ATTRACT mode and spacebar was just pressed, switch to GAME mode
+                // C++ enum: eGameState::ATTRACT = 0, eGameState::GAME = 1
+                // GameScriptInterface converts these to strings: "ATTRACT", "GAME"
+                if (currentGameState === 'ATTRACT') {
+                    if (game.setGameState) {
+                        game.setGameState('GAME');
+                        console.log('InputSystem: Spacebar pressed - Game state changed from ATTRACT to GAME');
+                    } else {
+                        console.log('InputSystem: Spacebar pressed but game.setGameState not available');
+                    }
+                } else {
+                    console.log('InputSystem: Spacebar pressed but not in ATTRACT mode (current state:', currentGameState, ')');
+                }
+            } else {
+                console.log('InputSystem: Spacebar pressed but game object not available');
+            }
+        }
+
+        // Update state for next frame edge detection
+        this.lastSpaceState = currentSpaceState;
+    }
+
+    /**
      * API methods for JSGame.js and other systems to query input state
      */
 
@@ -77,11 +137,27 @@ class InputSystem {
     }
 
     /**
+     * Get the current spacebar key state
+     * @returns {boolean} Current spacebar key state
+     */
+    getLastSpaceState() {
+        return this.lastSpaceState;
+    }
+
+    /**
      * Check if F1 key is currently pressed (for other systems if needed)
      * @returns {boolean} True if F1 is currently pressed
      */
     isF1Pressed() {
         return this.lastF1State;
+    }
+
+    /**
+     * Check if spacebar key is currently pressed (for other systems if needed)
+     * @returns {boolean} True if spacebar is currently pressed
+     */
+    isSpacePressed() {
+        return this.lastSpaceState;
     }
 
     /**

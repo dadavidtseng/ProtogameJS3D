@@ -43,8 +43,9 @@ class JSGame {
             priority: 10,
             enabled: true,
             data: {
-                description: 'F1 key handler delegated to InputSystem for AI Agent editing',
-                lastF1State: false
+                description: 'Input handler delegated to InputSystem - F1 key & spacebar game state transitions',
+                lastF1State: false,
+                lastSpaceState: false
             }
         });
         // Register Cube Spawner System
@@ -178,6 +179,7 @@ class JSGame {
 
         // Update system data from InputSystem for consistency
         system.data.lastF1State = this.inputSystem.getLastF1State();
+        system.data.lastSpaceState = this.inputSystem.getLastSpaceState();
     }
 
     /**
