@@ -48,16 +48,6 @@ std::string GameScriptInterface::GetScriptObjectName() const
 std::vector<ScriptMethodInfo> GameScriptInterface::GetAvailableMethods() const
 {
     return {
-        ScriptMethodInfo("getGameState",
-                         "Get current game state",
-                         {},
-                         "string"),
-
-        ScriptMethodInfo("setGameState",
-                         "Set current game state",
-                         {},
-                         "void"),
-
         ScriptMethodInfo("createCube",
                          "在指定位置創建一個立方體",
                          {"float", "float", "float"},
@@ -103,11 +93,6 @@ std::vector<ScriptMethodInfo> GameScriptInterface::GetAvailableMethods() const
                          {},
                          "bool"),
 
-        ScriptMethodInfo("getGameState",
-                         "取得目前遊戲狀態",
-                         {},
-                         "string"),
-
         ScriptMethodInfo("getFileTimestamp",
                          "取得檔案的最後修改時間戳記",
                          {"string"},
@@ -130,15 +115,6 @@ ScriptMethodResult GameScriptInterface::CallMethod(std::string const&           
 {
     try
     {
-        if (methodName == "getGameState")
-        {
-            return ExecuteGetGameState(args);
-        }
-        else if (methodName == "setGameState")
-        {
-            return ExecuteSetGameState(args);
-        }
-
         if (methodName == "createCube")
         {
             return ExecuteCreateCube(args);
@@ -193,7 +169,19 @@ std::any GameScriptInterface::GetProperty(const std::string& propertyName) const
     }
     else if (propertyName == "gameState")
     {
-        return m_game->IsAttractMode() ? "attract" : "game";
+        // Use proper Game::GetGameState() method with enum conversion
+        eGameState state = m_game->GetGameState();
+        
+        // Convert enum to string for JavaScript
+        switch (state)
+        {
+            case eGameState::ATTRACT:
+                return std::string("ATTRACT");
+            case eGameState::GAME:
+                return std::string("GAME");
+            default:
+                return std::string("UNKNOWN");
+        }
     }
 
     return std::any{};
@@ -202,79 +190,41 @@ std::any GameScriptInterface::GetProperty(const std::string& propertyName) const
 //----------------------------------------------------------------------------------------------------
 bool GameScriptInterface::SetProperty(const std::string& propertyName, const std::any& value)
 {
-    // 目前 Game 物件沒有可設定的屬性
-    // 如果需要，可以在這裡添加
-    UNUSED(propertyName);
+    if (propertyName == "gameState")
+    {
+        try
+        {
+            std::string stateStr = ScriptTypeExtractor::ExtractString(value);
+            
+            // Convert string to enum (same logic as SetProperty gameState handling)
+            eGameState newState;
+            if (stateStr == "ATTRACT" || stateStr == "attract" || stateStr == "0")
+            {
+                newState = eGameState::ATTRACT;
+            }
+            else if (stateStr == "GAME" || stateStr == "game" || stateStr == "1")
+            {
+                newState = eGameState::GAME;
+            }
+            else
+            {
+                // Invalid game state string - return false to indicate failure
+                return false;
+            }
+            
+            m_game->SetGameState(newState);
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            // Type conversion failed - return false to indicate failure
+            return false;
+        }
+    }
+    
+    // Property not found or not settable
     UNUSED(value);
     return false;
-}
-
-//----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteGetGameState(const std::vector<std::any>& args)
-{
-    auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "getGameState");
-
-    if (!result.success) return result;
-
-    try
-    {
-        eGameState state = m_game->GetGameState();
-        
-        // Convert enum to string for JavaScript
-        std::string stateStr;
-        switch (state)
-        {
-            case eGameState::ATTRACT:
-                stateStr = "ATTRACT";
-                break;
-            case eGameState::GAME:
-                stateStr = "GAME";
-                break;
-            default:
-                stateStr = "UNKNOWN";
-                break;
-        }
-        
-        return ScriptMethodResult::Success(stateStr);
-    }
-    catch (const std::exception& e)
-    {
-        return ScriptMethodResult::Error("取得遊戲狀態失敗: " + std::string(e.what()));
-    }
-}
-
-ScriptMethodResult GameScriptInterface::ExecuteSetGameState(const std::vector<std::any>& args)
-{
-    auto result = ScriptTypeExtractor::ValidateArgCount(args, 1, "setGameState");
-
-    if (!result.success) return result;
-
-    try
-    {
-        std::string stateStr = ScriptTypeExtractor::ExtractString(args[0]);
-        
-        // Convert string to enum
-        eGameState newState;
-        if (stateStr == "ATTRACT" || stateStr == "attract" || stateStr == "0")
-        {
-            newState = eGameState::ATTRACT;
-        }
-        else if (stateStr == "GAME" || stateStr == "game" || stateStr == "1")
-        {
-            newState = eGameState::GAME;
-        }
-        else
-        {
-            return ScriptMethodResult::Error("無效的遊戲狀態: " + stateStr + " (有效值: ATTRACT, GAME, 0, 1)");
-        }
-        
-        m_game->SetGameState(newState);
-        return ScriptMethodResult::Success("遊戲狀態已設定為: " + stateStr);
-    }
-    catch (const std::exception& e)
-    {
-        return ScriptMethodResult::Error("設定遊戲狀態失敗: " + std::string(e.what()));
-    }
 }
 
 //----------------------------------------------------------------------------------------------------

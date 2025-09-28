@@ -33,8 +33,6 @@ public:
 private:
     Game* m_game;
 
-    ScriptMethodResult ExecuteGetGameState(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteSetGameState(const std::vector<std::any>& args);
     ScriptMethodResult ExecuteCreateCube(const std::vector<std::any>& args);
     ScriptMethodResult ExecuteMoveProp(const std::vector<std::any>& args);
     ScriptMethodResult ExecuteGetPlayerPosition(const std::vector<std::any>& args);
