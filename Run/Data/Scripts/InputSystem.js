@@ -98,22 +98,40 @@ class InputSystem {
 
         // Edge detection for spacebar press
         if (currentSpaceState && !this.lastSpaceState) {
-            // Check if game object is available and get current game state
-            if (typeof game !== 'undefined' && game.getGameState) {
-                const currentGameState = game.getGameState();
+            console.log('InputSystem: Spacebar pressed - starting game state check');
+            
+            // Check if game object is available
+            if (typeof game !== 'undefined') {
+                console.log('InputSystem: game object is available');
                 
-                // If in ATTRACT mode and spacebar was just pressed, switch to GAME mode
-                // C++ enum: eGameState::ATTRACT = 0, eGameState::GAME = 1
-                // GameScriptInterface converts these to strings: "ATTRACT", "GAME"
-                if (currentGameState === 'ATTRACT') {
-                    if (game.setGameState) {
-                        game.setGameState('GAME');
-                        console.log('InputSystem: Spacebar pressed - Game state changed from ATTRACT to GAME');
+                // Use PROPERTY-BASED access (NEW IMPLEMENTATION)
+                try {
+                    console.log('InputSystem: Attempting to read game.gameState...');
+                    const currentGameState = game.gameState;
+                    console.log('InputSystem: game.gameState returned:', currentGameState, '(type:', typeof currentGameState, ')');
+                    
+                    // If in ATTRACT mode and spacebar was just pressed, switch to GAME mode
+                    // C++ enum: eGameState::ATTRACT = 0, eGameState::GAME = 1
+                    // GameScriptInterface converts these to strings: "ATTRACT", "GAME"
+                    if (currentGameState === 'ATTRACT') {
+                        console.log('InputSystem: Current state is ATTRACT, attempting to change to GAME');
+                        try {
+                            console.log('InputSystem: Setting game.gameState = "GAME"...');
+                            game.gameState = 'GAME';
+                            console.log('InputSystem: Property assignment completed');
+                            
+                            // Verify the change
+                            const newState = game.gameState;
+                            console.log('InputSystem: After setting, game.gameState is now:', newState);
+                            console.log('InputSystem: Spacebar pressed - Game state changed from ATTRACT to GAME via PROPERTY ACCESS');
+                        } catch (error) {
+                            console.log('InputSystem: Spacebar pressed but failed to set game state via property:', error);
+                        }
                     } else {
-                        console.log('InputSystem: Spacebar pressed but game.setGameState not available');
+                        console.log('InputSystem: Spacebar pressed but not in ATTRACT mode (current state:', currentGameState, ')');
                     }
-                } else {
-                    console.log('InputSystem: Spacebar pressed but not in ATTRACT mode (current state:', currentGameState, ')');
+                } catch (error) {
+                    console.log('InputSystem: Error accessing game properties:', error);
                 }
             } else {
                 console.log('InputSystem: Spacebar pressed but game object not available');
