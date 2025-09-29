@@ -19,7 +19,18 @@ class InputSystem {
     constructor() {
         this.lastF1State = false;
         this.lastSpaceState = false; // Track spacebar for game state transitions
+        this.audioSystem = null; // Will be set by JSGame
+
         console.log('CONSTRUCTOR: InputSystem created at', Date.now());
+    }
+
+    /**
+     * Set the AudioSystem instance (called by JSGame)
+     * @param {AudioSystem} audioSystem - AudioSystem instance from JSGame
+     */
+    setAudioSystem(audioSystem) {
+        this.audioSystem = audioSystem;
+        console.log('InputSystem: AudioSystem instance set');
     }
 
     /**
@@ -46,7 +57,7 @@ class InputSystem {
 
         // Handle F1 key (shouldRender toggle)
         this.handleF1Key();
-        
+
         // Handle keyboard-based game state transitions (extracted from C++ Game::UpdateFromKeyBoard)
         this.handleKeyboardGameState();
     }
@@ -56,10 +67,10 @@ class InputSystem {
      */
     handleF1Key() {
         let currentF1State = false;
-        
+
         // Try legacy input API (C++ InputScriptInterface)
         if (typeof input !== 'undefined' && input.wasKeyJustPressed) {
-            currentF1State = input.wasKeyJustPressed(112); // F1 key code
+            currentF1State = input.wasKeyJustPressed(KEYCODE_F1);
         }
 
         // Edge detection and shouldRender toggle (extracted from JSGame.js lines 187-198)
@@ -90,36 +101,52 @@ class InputSystem {
      */
     handleKeyboardGameState() {
         let currentSpaceState = false;
-        
+
         // Check spacebar state using C++ input system
         if (typeof input !== 'undefined' && input.wasKeyJustPressed) {
-            currentSpaceState = input.wasKeyJustPressed(32); // Spacebar key code
+            currentSpaceState = input.wasKeyJustPressed(KEYCODE_SPACE);
         }
 
         // Edge detection for spacebar press
         if (currentSpaceState && !this.lastSpaceState) {
             console.log('InputSystem: Spacebar pressed - starting game state check');
-            
+
             // Check if game object is available
             if (typeof game !== 'undefined') {
                 console.log('InputSystem: game object is available');
-                
+
                 // Use PROPERTY-BASED access (NEW IMPLEMENTATION)
                 try {
                     console.log('InputSystem: Attempting to read game.gameState...');
                     const currentGameState = game.gameState;
                     console.log('InputSystem: game.gameState returned:', currentGameState, '(type:', typeof currentGameState, ')');
-                    
+
                     // If in ATTRACT mode and spacebar was just pressed, switch to GAME mode
                     // C++ enum: eGameState::ATTRACT = 0, eGameState::GAME = 1
                     // GameScriptInterface converts these to strings: "ATTRACT", "GAME"
                     if (currentGameState === 'ATTRACT') {
                         console.log('InputSystem: Current state is ATTRACT, attempting to change to GAME');
+
+                        // Play click sound effect when changing from ATTRACT to GAME
+                        console.log('InputSystem: Playing click sound effect...');
+                        if (this.audioSystem) {
+                            const clickSound = this.audioSystem.createOrGetSound("Data/Audio/TestSound.mp3", "Sound2D");
+                            if (clickSound !== null && clickSound !== undefined) {
+                                this.audioSystem.startSound(clickSound);
+                                console.log('InputSystem: Click sound effect played successfully');
+                            } else {
+                                console.log('InputSystem: Failed to load click sound effect');
+                            }
+                        } else {
+                            console.log('InputSystem: AudioSystem not available');
+                        }
+
+                        // Try to change game state (separate from audio)
                         try {
                             console.log('InputSystem: Setting game.gameState = "GAME"...');
                             game.gameState = 'GAME';
                             console.log('InputSystem: Property assignment completed');
-                            
+
                             // Verify the change
                             const newState = game.gameState;
                             console.log('InputSystem: After setting, game.gameState is now:', newState);
