@@ -8,6 +8,7 @@
 #include <chrono>
 
 #include "Engine/Audio/AudioSystem.hpp"
+#include "Engine/Audio/AudioScriptInterface.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -429,6 +430,9 @@ void App::SetupScriptingBindings()
 
     m_inputScriptInterface = std::make_shared<InputScriptInterface>(g_input);
     g_scriptSubsystem->RegisterScriptableObject("input", m_inputScriptInterface);
+
+    m_audioScriptInterface = std::make_shared<AudioScriptInterface>(g_audio);
+    g_scriptSubsystem->RegisterScriptableObject("audio", m_audioScriptInterface);
 
     g_scriptSubsystem->RegisterGlobalFunction("print", OnPrint);
     g_scriptSubsystem->RegisterGlobalFunction("debug", OnDebug);

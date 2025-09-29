@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "Engine/Core/EventSystem.hpp"
+#include "Engine/Audio/AudioScriptInterface.hpp"
 #include "Engine/Input/InputScriptInterface.hpp"
 #include "Game/Framework/GameScriptInterface.hpp"
 
@@ -43,7 +44,8 @@ private:
     void UpdateCursorMode();
     void SetupScriptingBindings();
 
-    Camera*                               m_devConsoleCamera = nullptr;
-    std::shared_ptr<GameScriptInterface>  m_gameScriptInterface;
-    std::shared_ptr<InputScriptInterface> m_inputScriptInterface;
+    Camera*                                m_devConsoleCamera = nullptr;
+    std::shared_ptr<GameScriptInterface>   m_gameScriptInterface;
+    std::shared_ptr<InputScriptInterface>  m_inputScriptInterface;
+    std::shared_ptr<AudioScriptInterface>  m_audioScriptInterface;
 };
