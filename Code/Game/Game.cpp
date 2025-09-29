@@ -26,6 +26,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "Engine/Audio/AudioSystem.hpp"
+
 //----------------------------------------------------------------------------------------------------
 Game::Game()
 {
@@ -152,6 +154,8 @@ void Game::UpdateFromKeyBoard()
     {
         if (g_input->WasKeyJustPressed(KEYCODE_ESC))
         {
+            SoundID const clickSound = g_audio->CreateOrGetSound("Data/Audio/TestSound.mp3", eAudioSystemSoundDimension::Sound2D);
+            g_audio->StartSound(clickSound);
             m_gameState = eGameState::ATTRACT;
         }
 
@@ -795,11 +799,17 @@ void Game::InitializeJavaScriptFramework()
     try
     {
         // Load the JavaScript framework files in dependency order
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading InputSystemCommon.js...");
+        ExecuteJavaScriptFile("Data/Scripts/InputSystemCommon.js");
+
         DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading JSEngine.js...");
         ExecuteJavaScriptFile("Data/Scripts/JSEngine.js");
 
         DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading InputSystem.js...");
         ExecuteJavaScriptFile("Data/Scripts/InputSystem.js");
+
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading AudioSystem.js...");
+        ExecuteJavaScriptFile("Data/Scripts/AudioSystem.js");
 
         DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading JSGame.js...");
         ExecuteJavaScriptFile("Data/Scripts/JSGame.js");
