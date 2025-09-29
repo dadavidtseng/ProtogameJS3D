@@ -11,6 +11,10 @@ class JSGame {
 
         // Create InputSystem instance for delegation
         this.inputSystem = new InputSystem();
+        this.audioSystem = new AudioSystem();
+        
+        // Connect InputSystem with AudioSystem
+        this.inputSystem.setAudioSystem(this.audioSystem);
 
         // Register individual game systems
         this.registerGameSystems();
@@ -48,7 +52,17 @@ class JSGame {
                 lastSpaceState: false
             }
         });
-        // Register Cube Spawner System
+
+        // Register Audio System (delegated to AudioSystem.js for sound management)
+        this.engine.registerSystem('audioHandler', {
+            update: (gameDeltaSeconds, systemDeltaSeconds) => this.updateAudioHandler(gameDeltaSeconds, systemDeltaSeconds),
+            priority: 15,
+            enabled: true,
+            data: {
+                description: 'Audio system handler delegated to AudioSystem - sound loading and playback',
+                systemVersion: 0
+            }
+        });
 
         this.engine.registerSystem('cubeSpawner', {
             update: (gameDeltaSeconds, systemDeltaSeconds) => this.updateCubeSpawner(gameDeltaSeconds, systemDeltaSeconds),
@@ -112,6 +126,35 @@ class JSGame {
     }
 
     /**
+     * Enable audio system - Audio will work
+     */
+    enableAudio() {
+        return this.engine.setSystemEnabled('audioHandler', true);
+    }
+
+    /**
+     * Disable audio system - Audio will NOT work
+     */
+    disableAudio() {
+        return this.engine.setSystemEnabled('audioHandler', false);
+    }
+
+    /**
+     * Check if audio system is enabled
+     */
+    isAudioEnabled() {
+        const system = this.engine.getSystem('audioHandler');
+        return system ? system.enabled : false;
+    }
+
+    /**
+     * Get audio system status
+     */
+    getAudioStatus() {
+        return this.audioSystem ? this.audioSystem.getStatus() : null;
+    }
+
+    /**
      * Register new system at runtime (for AI agents)
      */
     registerSystem(id, config) {
@@ -171,6 +214,11 @@ class JSGame {
             console.log('JSGame: InputSystem hot-reloaded, creating new instance');
             this.inputSystem = new InputSystem();
             this.inputSystemVersion = InputSystem.version;
+            
+            // Set AudioSystem reference for InputSystem
+            if (this.audioSystem) {
+                this.inputSystem.setAudioSystem(this.audioSystem);
+            }
         }
 
         // Delegate input handling to InputSystem (AI Agent separation)
@@ -222,6 +270,33 @@ class JSGame {
             this.testCameraShake();
             system.data.lastShakeFrame = this.frameCount;
         }
+    }
+
+    /**
+     * Audio Handler System - delegated to AudioSystem.js for sound management
+     * Uses systemDeltaSeconds so audio operations continue even when game is paused
+     */
+    updateAudioHandler(gameDeltaSeconds, systemDeltaSeconds) {
+        const system = this.engine.getSystem('audioHandler');
+        if (!system) return;
+
+        // Check if AudioSystem has been reloaded (hot-reload support)
+        // Compare static class version instead of creating test instances
+        if (!this.audioSystemVersion || AudioSystem.version > this.audioSystemVersion) {
+            console.log('JSGame: AudioSystem hot-reloaded, creating new instance');
+            this.audioSystem = new AudioSystem();
+            this.audioSystemVersion = AudioSystem.version;
+            system.data.systemVersion = AudioSystem.version;
+            
+            // Update InputSystem's AudioSystem reference when AudioSystem is reloaded
+            if (this.inputSystem) {
+                this.inputSystem.setAudioSystem(this.audioSystem);
+            }
+        }
+
+        // AudioSystem doesn't need regular update calls like InputSystem
+        // It handles audio operations on-demand through method calls
+        // But we maintain the system for hot-reload detection and management
     }
 
     /**
@@ -286,4 +361,5 @@ if (typeof globalThis.shouldRender === 'undefined') {
 console.log('JSGame: System registration framework initialized');
 console.log('Available API: globalThis.GameAPI for system management');
 console.log('Input system status:', jsGameInstance.isInputEnabled() ? 'ENABLED' : 'DISABLED');
+console.log('Audio system status:', jsGameInstance.isAudioEnabled() ? 'ENABLED' : 'DISABLED');
 console.log('Hot-reload system status:', jsEngineInstance.hotReloadEnabled ? 'AVAILABLE (C++)' : 'NOT AVAILABLE');
