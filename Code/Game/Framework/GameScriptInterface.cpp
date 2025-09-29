@@ -34,17 +34,6 @@ GameScriptInterface::GameScriptInterface(Game* game)
 }
 
 //----------------------------------------------------------------------------------------------------
-GameScriptInterface::~GameScriptInterface()
-{
-}
-
-//----------------------------------------------------------------------------------------------------
-std::string GameScriptInterface::GetScriptObjectName() const
-{
-    return "game";
-}
-
-//----------------------------------------------------------------------------------------------------
 std::vector<ScriptMethodInfo> GameScriptInterface::GetAvailableMethods() const
 {
     return {
@@ -101,7 +90,7 @@ std::vector<ScriptMethodInfo> GameScriptInterface::GetAvailableMethods() const
 }
 
 //----------------------------------------------------------------------------------------------------
-std::vector<std::string> GameScriptInterface::GetAvailableProperties() const
+std::vector<String> GameScriptInterface::GetAvailableProperties() const
 {
     return {
         "attractMode",
@@ -110,8 +99,8 @@ std::vector<std::string> GameScriptInterface::GetAvailableProperties() const
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::CallMethod(std::string const&           methodName,
-                                                   std::vector<std::any> const& args)
+ScriptMethodResult GameScriptInterface::CallMethod(String const&     methodName,
+                                                   ScriptArgs const& args)
 {
     try
     {
@@ -156,12 +145,12 @@ ScriptMethodResult GameScriptInterface::CallMethod(std::string const&           
     }
     catch (std::exception const& e)
     {
-        return ScriptMethodResult::Error("方法執行時發生例外: " + std::string(e.what()));
+        return ScriptMethodResult::Error("方法執行時發生例外: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-std::any GameScriptInterface::GetProperty(const std::string& propertyName) const
+std::any GameScriptInterface::GetProperty(const String& propertyName) const
 {
     if (propertyName == "attractMode")
     {
@@ -171,16 +160,16 @@ std::any GameScriptInterface::GetProperty(const std::string& propertyName) const
     {
         // Use proper Game::GetGameState() method with enum conversion
         eGameState state = m_game->GetGameState();
-        
+
         // Convert enum to string for JavaScript
         switch (state)
         {
-            case eGameState::ATTRACT:
-                return std::string("ATTRACT");
-            case eGameState::GAME:
-                return std::string("GAME");
-            default:
-                return std::string("UNKNOWN");
+        case eGameState::ATTRACT:
+            return String("ATTRACT");
+        case eGameState::GAME:
+            return String("GAME");
+        default:
+            return String("UNKNOWN");
         }
     }
 
@@ -188,14 +177,14 @@ std::any GameScriptInterface::GetProperty(const std::string& propertyName) const
 }
 
 //----------------------------------------------------------------------------------------------------
-bool GameScriptInterface::SetProperty(const std::string& propertyName, const std::any& value)
+bool GameScriptInterface::SetProperty(const String& propertyName, const std::any& value)
 {
     if (propertyName == "gameState")
     {
         try
         {
-            std::string stateStr = ScriptTypeExtractor::ExtractString(value);
-            
+            String stateStr = ScriptTypeExtractor::ExtractString(value);
+
             // Convert string to enum (same logic as SetProperty gameState handling)
             eGameState newState;
             if (stateStr == "ATTRACT" || stateStr == "attract" || stateStr == "0")
@@ -211,7 +200,7 @@ bool GameScriptInterface::SetProperty(const std::string& propertyName, const std
                 // Invalid game state string - return false to indicate failure
                 return false;
             }
-            
+
             m_game->SetGameState(newState);
             return true;
         }
@@ -221,14 +210,12 @@ bool GameScriptInterface::SetProperty(const std::string& propertyName, const std
             return false;
         }
     }
-    
-    // Property not found or not settable
-    UNUSED(value);
+
     return false;
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteCreateCube(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteCreateCube(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 3, "createCube");
     if (!result.success) return result;
@@ -237,19 +224,19 @@ ScriptMethodResult GameScriptInterface::ExecuteCreateCube(const std::vector<std:
     {
         Vec3 position = ScriptTypeExtractor::ExtractVec3(args, 0);
         m_game->CreateCube(position);
-        return ScriptMethodResult::Success(std::string("立方體創建成功，位置: (" +
+        return ScriptMethodResult::Success(String("立方體創建成功，位置: (" +
             std::to_string(position.x) + ", " +
             std::to_string(position.y) + ", " +
             std::to_string(position.z) + ")"));
     }
     catch (const std::exception& e)
     {
-        return ScriptMethodResult::Error("創建立方體失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("創建立方體失敗: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteMoveProp(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteMoveProp(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 4, "moveProp");
     if (!result.success) return result;
@@ -259,7 +246,7 @@ ScriptMethodResult GameScriptInterface::ExecuteMoveProp(const std::vector<std::a
         int  propIndex   = ScriptTypeExtractor::ExtractInt(args[0]);
         Vec3 newPosition = ScriptTypeExtractor::ExtractVec3(args, 1);
         m_game->MoveProp(propIndex, newPosition);
-        return ScriptMethodResult::Success(std::string("道具 " + std::to_string(propIndex) +
+        return ScriptMethodResult::Success(String("道具 " + std::to_string(propIndex) +
             " 移動成功，新位置: (" +
             std::to_string(newPosition.x) + ", " +
             std::to_string(newPosition.y) + ", " +
@@ -267,12 +254,12 @@ ScriptMethodResult GameScriptInterface::ExecuteMoveProp(const std::vector<std::a
     }
     catch (const std::exception& e)
     {
-        return ScriptMethodResult::Error("移動道具失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("移動道具失敗: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteGetPlayerPosition(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteGetPlayerPosition(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "getPlayerPosition");
     if (!result.success) return result;
@@ -289,7 +276,7 @@ ScriptMethodResult GameScriptInterface::ExecuteGetPlayerPosition(const std::vect
 
 
         // 回傳一個可以被 JavaScript 使用的物件
-        std::string positionStr = "{ x: " + std::to_string(position.x) +
+        String positionStr = "{ x: " + std::to_string(position.x) +
             ", y: " + std::to_string(position.y) +
             ", z: " + std::to_string(position.z) + " }";
 
@@ -297,12 +284,12 @@ ScriptMethodResult GameScriptInterface::ExecuteGetPlayerPosition(const std::vect
     }
     catch (const std::exception& e)
     {
-        return ScriptMethodResult::Error("取得玩家位置失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("取得玩家位置失敗: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteMovePlayerCamera(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteMovePlayerCamera(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 3, "movePlayerCamera");
     if (!result.success) return result;
@@ -311,18 +298,18 @@ ScriptMethodResult GameScriptInterface::ExecuteMovePlayerCamera(const std::vecto
     {
         Vec3 offset = ScriptTypeExtractor::ExtractVec3(args, 0);
         m_game->MovePlayerCamera(offset);
-        return ScriptMethodResult::Success(std::string("相機位置已移動: (" +
+        return ScriptMethodResult::Success(String("相機位置已移動: (" +
             std::to_string(offset.x) + ", " +
             std::to_string(offset.y) + ", " +
             std::to_string(offset.z) + ")"));
     }
     catch (const std::exception& e)
     {
-        return ScriptMethodResult::Error("移動玩家相機失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("移動玩家相機失敗: " + String(e.what()));
     }
 }
 
-ScriptMethodResult GameScriptInterface::ExecuteRender(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteRender(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "Render");
     if (!result.success) return result;
@@ -334,11 +321,11 @@ ScriptMethodResult GameScriptInterface::ExecuteRender(const std::vector<std::any
     }
     catch (const std::exception& e)
     {
-        return ScriptMethodResult::Error("Render failed: " + std::string(e.what()));
+        return ScriptMethodResult::Error("Render failed: " + String(e.what()));
     }
 }
 
-ScriptMethodResult GameScriptInterface::ExecuteUpdate(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteUpdate(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 2, "Update");
     if (!result.success) return result;
@@ -353,48 +340,48 @@ ScriptMethodResult GameScriptInterface::ExecuteUpdate(const std::vector<std::any
     }
     catch (std::exception const& e)
     {
-        return ScriptMethodResult::Error("Update failed: " + std::string(e.what()));
+        return ScriptMethodResult::Error("Update failed: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteJavaScriptCommand(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteJavaScriptCommand(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 1, "executeCommand");
     if (!result.success) return result;
 
     try
     {
-        std::string command = ScriptTypeExtractor::ExtractString(args[0]);
+        String command = ScriptTypeExtractor::ExtractString(args[0]);
         m_game->ExecuteJavaScriptCommand(command);
-        return ScriptMethodResult::Success(std::string("指令執行: " + command));
+        return ScriptMethodResult::Success(String("指令執行: " + command));
     }
     catch (std::exception const& e)
     {
-        return ScriptMethodResult::Error("執行 JavaScript 指令失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("執行 JavaScript 指令失敗: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteJavaScriptFile(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteJavaScriptFile(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 1, "executeFile");
     if (!result.success) return result;
 
     try
     {
-        std::string filename = ScriptTypeExtractor::ExtractString(args[0]);
+        String filename = ScriptTypeExtractor::ExtractString(args[0]);
         m_game->ExecuteJavaScriptFile(filename);
-        return ScriptMethodResult::Success(std::string("檔案執行: " + filename));
+        return ScriptMethodResult::Success(String("檔案執行: " + filename));
     }
     catch (std::exception const& e)
     {
-        return ScriptMethodResult::Error("執行 JavaScript 檔案失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("執行 JavaScript 檔案失敗: " + String(e.what()));
     }
 }
 
 //----------------------------------------------------------------------------------------------------
-ScriptMethodResult GameScriptInterface::ExecuteIsAttractMode(const std::vector<std::any>& args)
+ScriptMethodResult GameScriptInterface::ExecuteIsAttractMode(const ScriptArgs& args)
 {
     auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "isAttractMode");
     if (!result.success) return result;
@@ -406,6 +393,6 @@ ScriptMethodResult GameScriptInterface::ExecuteIsAttractMode(const std::vector<s
     }
     catch (std::exception const& e)
     {
-        return ScriptMethodResult::Error("檢查吸引模式失敗: " + std::string(e.what()));
+        return ScriptMethodResult::Error("檢查吸引模式失敗: " + String(e.what()));
     }
 }

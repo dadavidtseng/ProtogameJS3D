@@ -9,37 +9,30 @@
 
 //-Forward-Declaration--------------------------------------------------------------------------------
 class Game;
-class Player;
-class ScriptSubsystem;
-struct Vec3;
 
 //----------------------------------------------------------------------------------------------------
 class GameScriptInterface : public IScriptableObject
 {
 public:
     explicit GameScriptInterface(Game* game);
-    ~GameScriptInterface() override;
 
-    // 實作 IScriptableObject 介面
-    std::string                   GetScriptObjectName() const override;
     std::vector<ScriptMethodInfo> GetAvailableMethods() const override;
-    ScriptMethodResult            CallMethod(std::string const& methodName, std::vector<std::any> const& args) override;
+    StringList                    GetAvailableProperties() const override;
 
-    // 實作屬性存取
-    std::any                 GetProperty(const std::string& propertyName) const override;
-    bool                     SetProperty(const std::string& propertyName, const std::any& value) override;
-    std::vector<std::string> GetAvailableProperties() const override;
+    ScriptMethodResult CallMethod(String const& methodName, ScriptArgs const& args) override;
+    std::any           GetProperty(String const& propertyName) const override;
+    bool               SetProperty(String const& propertyName, std::any const& value) override;
 
 private:
     Game* m_game;
 
-    ScriptMethodResult ExecuteCreateCube(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteMoveProp(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteGetPlayerPosition(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteMovePlayerCamera(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteRender(std::vector<std::any> const& args);
-    ScriptMethodResult ExecuteUpdate(std::vector<std::any> const& args);
-    ScriptMethodResult ExecuteJavaScriptCommand(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteJavaScriptFile(const std::vector<std::any>& args);
-    ScriptMethodResult ExecuteIsAttractMode(const std::vector<std::any>& args);
+    ScriptMethodResult ExecuteCreateCube(ScriptArgs const& args);
+    ScriptMethodResult ExecuteMoveProp(ScriptArgs const& args);
+    ScriptMethodResult ExecuteGetPlayerPosition(ScriptArgs const& args);
+    ScriptMethodResult ExecuteMovePlayerCamera(ScriptArgs const& args);
+    ScriptMethodResult ExecuteRender(ScriptArgs const& args);
+    ScriptMethodResult ExecuteUpdate(ScriptArgs const& args);
+    ScriptMethodResult ExecuteJavaScriptCommand(ScriptArgs const& args);
+    ScriptMethodResult ExecuteJavaScriptFile(ScriptArgs const& args);
+    ScriptMethodResult ExecuteIsAttractMode(ScriptArgs const& args);
 };
