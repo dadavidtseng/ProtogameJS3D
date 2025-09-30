@@ -26,6 +26,7 @@ public:
 private:
     Game* m_game;
 
+    ScriptMethodResult ExecuteAppRequestQuit(ScriptArgs const& args);
     ScriptMethodResult ExecuteCreateCube(ScriptArgs const& args);
     ScriptMethodResult ExecuteMoveProp(ScriptArgs const& args);
     ScriptMethodResult ExecuteGetPlayerPosition(ScriptArgs const& args);

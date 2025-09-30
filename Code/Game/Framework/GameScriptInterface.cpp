@@ -11,6 +11,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "App.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
@@ -37,6 +38,11 @@ GameScriptInterface::GameScriptInterface(Game* game)
 std::vector<ScriptMethodInfo> GameScriptInterface::GetAvailableMethods() const
 {
     return {
+        ScriptMethodInfo("appRequestQuit",
+                         "Request quit to app",
+                         {},
+                         "void"),
+
         ScriptMethodInfo("createCube",
                          "在指定位置創建一個立方體",
                          {"float", "float", "float"},
@@ -104,7 +110,11 @@ ScriptMethodResult GameScriptInterface::CallMethod(String const&     methodName,
 {
     try
     {
-        if (methodName == "createCube")
+        if (methodName == "appRequestQuit")
+        {
+            return ExecuteAppRequestQuit(args);
+        }
+        else if (methodName == "createCube")
         {
             return ExecuteCreateCube(args);
         }
@@ -212,6 +222,22 @@ bool GameScriptInterface::SetProperty(const String& propertyName, const std::any
     }
 
     return false;
+}
+
+ScriptMethodResult GameScriptInterface::ExecuteAppRequestQuit(ScriptArgs const& args)
+{
+    auto result = ScriptTypeExtractor::ValidateArgCount(args, 0, "appRequestQuit");
+    if (!result.success) return result;
+
+    try
+    {
+        App::RequestQuit();
+        return ScriptMethodResult::Success();
+    }
+    catch (const std::exception& e)
+    {
+        return ScriptMethodResult::Error("創建立方體失敗: " + String(e.what()));
+    }
 }
 
 //----------------------------------------------------------------------------------------------------
