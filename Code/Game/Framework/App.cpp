@@ -73,7 +73,8 @@ void App::Startup()
 
     sRendererConfig sRendererConfig;
     sRendererConfig.m_window = g_window;
-    g_renderer               = new Renderer(sRendererConfig);
+    // ResourceSubsystem is now accessed globally - no dependency injection needed
+    g_renderer = new Renderer(sRendererConfig);
 
     //-End-of-Renderer--------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------
@@ -137,9 +138,9 @@ void App::Startup()
     // Configure Minecraft-style rotation settings
     config.smartRotationConfig.maxFileSizeBytes = 100 * 1024 * 1024;  // 100MB per file
     config.smartRotationConfig.maxTimeInterval  = std::chrono::hours(2); // 2 hours max per segment
-    config.smartRotationConfig.logDirectory   = "Logs";                   // Log directory
-    config.smartRotationConfig.currentLogName = "latest.log";           // Current session log
-    config.smartRotationConfig.sessionPrefix  = "session";               // Archive prefix
+    config.smartRotationConfig.logDirectory     = "Logs";                   // Log directory
+    config.smartRotationConfig.currentLogName   = "latest.log";           // Current session log
+    config.smartRotationConfig.sessionPrefix    = "session";               // Archive prefix
 
     g_logSubsystem = new LogSubsystem(config);
 
@@ -180,18 +181,21 @@ void App::Startup()
     g_logSubsystem->Startup();
     g_eventSystem->Startup();
     g_window->Startup();
+
     g_renderer->Startup();
+    ResourceSubsystem::Initialize(g_renderer);
     DebugRenderSystemStartup(sDebugRenderConfig);
     g_devConsole->StartUp();
     g_input->Startup();
     g_audio->Startup();
-    g_resourceSubsystem->Startup();
+    g_resourceSubsystem->Startup();  // Keep the old instance for backward compatibility
     g_scriptSubsystem->Startup();
 
     g_logSubsystem->RegisterCategory("LogApp", eLogVerbosity::Log, eLogVerbosity::All);
     g_logSubsystem->RegisterCategory("LogGame", eLogVerbosity::Log, eLogVerbosity::All);
 
-    g_bitmapFont = g_renderer->CreateOrGetBitmapFontFromFile("Data/Fonts/DaemonFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
+    // g_bitmapFont = g_renderer->CreateOrGetBitmapFontFromFile("Data/Fonts/DaemonFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
+    g_bitmapFont = ResourceSubsystem::CreateOrGetBitmapFontFromFile("Data/Fonts/DaemonFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
     g_rng        = new RandomNumberGenerator();
     g_game       = new Game();
     SetupScriptingBindings();
@@ -221,11 +225,11 @@ void App::Shutdown()
         m_gameScriptInterface.reset();
     }
 
-    // Destroy all Engine Subsystem
+    // Destroy all Engine Subsystem in reverse order
     GAME_SAFE_RELEASE(g_game);
     GAME_SAFE_RELEASE(g_rng);
-    GAME_SAFE_RELEASE(g_bitmapFont);
 
+    // Shutdown subsystems in reverse order of initialization
     g_audio->Shutdown();
     g_input->Shutdown();
     g_devConsole->Shutdown();
@@ -233,6 +237,20 @@ void App::Shutdown()
     GAME_SAFE_RELEASE(m_devConsoleCamera);
 
     DebugRenderSystemShutdown();
+
+    // CRITICAL: Delete g_bitmapFont BEFORE ResourceSubsystem and Renderer shutdown
+    // BitmapFont references Texture owned by Renderer, must be deleted while Renderer is still valid
+    GAME_SAFE_RELEASE(g_bitmapFont);
+
+    // Shutdown and delete ResourceSubsystem before Renderer
+    if (g_resourceSubsystem)
+    {
+        g_resourceSubsystem->Shutdown();
+        delete g_resourceSubsystem;
+        g_resourceSubsystem = nullptr;
+    }
+
+    // Now shutdown Renderer which will release all textures including the BitmapFont texture
     g_renderer->Shutdown();
     g_window->Shutdown();
     g_eventSystem->Shutdown();
@@ -241,6 +259,16 @@ void App::Shutdown()
     GAME_SAFE_RELEASE(g_renderer);
     GAME_SAFE_RELEASE(g_window);
     GAME_SAFE_RELEASE(g_input);
+    GAME_SAFE_RELEASE(g_devConsole);
+    GAME_SAFE_RELEASE(g_eventSystem);
+
+    // Shutdown and delete LogSubsystem last
+    if (g_logSubsystem)
+    {
+        g_logSubsystem->Shutdown();
+        delete g_logSubsystem;
+        g_logSubsystem = nullptr;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------
