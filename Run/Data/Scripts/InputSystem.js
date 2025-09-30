@@ -111,6 +111,8 @@ class InputSystem {
         if (currentSpaceState && !this.lastSpaceState) {
             console.log('InputSystem: Spacebar pressed - starting game state check');
 
+            // game.appRequestQuit();
+
             // Check if game object is available
             if (typeof game !== 'undefined') {
                 console.log('InputSystem: game object is available');
