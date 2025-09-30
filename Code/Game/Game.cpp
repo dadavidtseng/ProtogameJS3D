@@ -154,8 +154,6 @@ void Game::UpdateFromKeyBoard()
     {
         if (g_input->WasKeyJustPressed(KEYCODE_ESC))
         {
-            SoundID const clickSound = g_audio->CreateOrGetSound("Data/Audio/TestSound.mp3", eAudioSystemSoundDimension::Sound2D);
-            g_audio->StartSound(clickSound);
             m_gameState = eGameState::ATTRACT;
         }
 
@@ -340,6 +338,7 @@ void Game::RenderAttractMode() const
     g_renderer->SetSamplerMode(eSamplerMode::BILINEAR_CLAMP);
     g_renderer->SetDepthMode(eDepthMode::DISABLED);
     g_renderer->BindTexture(nullptr);
+    // g_renderer->BindShader(g_renderer->CreateOrGetShaderFromFile("Data/Shaders/Default"));
     g_renderer->BindShader(g_renderer->CreateOrGetShaderFromFile("Data/Shaders/Default"));
     g_renderer->DrawVertexArray(verts);
 }
@@ -370,7 +369,8 @@ void Game::InitPlayer() const
 //----------------------------------------------------------------------------------------------------
 void Game::SpawnProps()
 {
-    Texture const* texture = g_renderer->CreateOrGetTextureFromFile("Data/Images/TestUV.png");
+    // Texture const* texture = g_renderer->CreateOrGetTextureFromFile("Data/Images/TestUV.png");
+    Texture const* texture = ResourceSubsystem::CreateOrGetTextureFromFile("Data/Images/TestUV.png");
 
     m_props.reserve(4);
 
