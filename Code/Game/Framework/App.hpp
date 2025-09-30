@@ -6,10 +6,11 @@
 #pragma once
 #include <memory>
 
-#include "Engine/Core/EventSystem.hpp"
-#include "Engine/Audio/AudioScriptInterface.hpp"
-#include "Engine/Input/InputScriptInterface.hpp"
 #include "Game/Framework/GameScriptInterface.hpp"
+
+#include "Engine/Audio/AudioScriptInterface.hpp"
+#include "Engine/Core/EventSystem.hpp"
+#include "Engine/Input/InputScriptInterface.hpp"
 
 //-Forward-Declaration--------------------------------------------------------------------------------
 class Camera;
