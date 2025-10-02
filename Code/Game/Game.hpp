@@ -39,6 +39,7 @@ public:
 
     void ExecuteJavaScriptCommand(String const& command);
     void ExecuteJavaScriptFile(String const& filename);
+    void ExecuteModuleFile(String const& modulePath);
     void HandleJavaScriptCommands();
 
     // SCRIPT REGISTRY: Chrome DevTools selective integration

@@ -872,6 +872,31 @@ void Game::ExecuteJavaScriptFile(String const& filename)
 }
 
 //----------------------------------------------------------------------------------------------------
+void Game::ExecuteModuleFile(String const& modulePath)
+{
+    if (g_scriptSubsystem == nullptr)ERROR_AND_DIE(StringFormat("(Game::ExecuteModuleFile)(g_scriptSubsystem is nullptr!)"))
+    if (!g_scriptSubsystem->IsInitialized())ERROR_AND_DIE(StringFormat("(Game::ExecuteModuleFile)(g_scriptSubsystem is not initialized!)"))
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Log, StringFormat("(Game::ExecuteModuleFile)(start)({})", modulePath));
+
+    bool const success = g_scriptSubsystem->ExecuteModule(modulePath);
+
+    if (!success)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, StringFormat("(Game::ExecuteModuleFile)(fail)({})", modulePath));
+
+        if (g_scriptSubsystem->HasError())
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, StringFormat("(Game::ExecuteModuleFile)(fail)(error: {})", g_scriptSubsystem->GetLastError()));
+        }
+
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Log, StringFormat("(Game::ExecuteModuleFile)(end)({})", modulePath.c_str()));
+}
+
+//----------------------------------------------------------------------------------------------------
 void Game::HandleJavaScriptCommands()
 {
     // 處理動態 JavaScript 指令（例如從網路、檔案或其他來源）
@@ -1082,23 +1107,18 @@ void Game::InitializeJavaScriptFramework()
 
     try
     {
-        // Load the JavaScript framework files in dependency order
-        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading InputSystemCommon.js...");
-        ExecuteJavaScriptFile("Data/Scripts/InputSystemCommon.js");
+        // Phase 4: Pure ES6 Module architecture with single entry point
+        // All JavaScript code is now loaded through the ES6 module system
 
-        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading JSEngine.js...");
-        ExecuteJavaScriptFile("Data/Scripts/JSEngine.js");
+        // NOTE: Legacy classic scripts (InputSystemCommon.js, InputSystem.js, AudioSystem.js)
+        // have been removed. All functionality should be migrated to ES6 modules.
+        // If you need these systems, create .mjs equivalents and import them in main.mjs.
 
-        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading InputSystem.js...");
-        ExecuteJavaScriptFile("Data/Scripts/InputSystem.js");
+        // Load ES6 module entry point (imports all other modules via import statements)
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading main.mjs (ES6 module entry point)...");
+        ExecuteModuleFile("Data/Scripts/main.mjs");
 
-        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading AudioSystem.js...");
-        ExecuteJavaScriptFile("Data/Scripts/AudioSystem.js");
-
-        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Loading JSGame.js...");
-        ExecuteJavaScriptFile("Data/Scripts/JSGame.js");
-
-        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Game::InitializeJavaScriptFramework() complete - C++ hot-reload system integrated");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "Game::InitializeJavaScriptFramework() complete - Pure ES6 Module architecture initialized");
     }
     catch (...)
     {
