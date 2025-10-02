@@ -4,15 +4,15 @@
 
 //----------------------------------------------------------------------------------------------------
 #include "Game/Framework/App.hpp"
-
-#include <chrono>
-
-#include "Engine/Audio/AudioSystem.hpp"
+//----------------------------------------------------------------------------------------------------
 #include "Engine/Audio/AudioScriptInterface.hpp"
+#include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
+#include "Engine/Core/Engine.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
+#include "Engine/Core/JobSystem.hpp"
 #include "Engine/Core/LogSubsystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
@@ -24,6 +24,7 @@
 #include "Engine/Scripting/ScriptSubsystem.hpp"
 #include "Game/Game.hpp"
 #include "Game/Framework/GameCommon.hpp"
+#include "ThirdParty/json/json.hpp"
 
 //----------------------------------------------------------------------------------------------------
 App*                   g_app               = nullptr;       // Created and owned by Main_Windows.cpp
@@ -51,6 +52,18 @@ void App::Startup()
 
     //-End-of-EventSystem-----------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------
+    //-Start-of-JobSystem-----------------------------------------------------------------------------
+
+    // Initialize JobSystem with 3 generic worker threads and 1 I/O thread
+    JobSystem* jobSystem = new JobSystem();
+    jobSystem->StartUp(3, 1);
+    g_jobSystem = jobSystem;  // Set global pointer for backward compatibility
+
+    // Initialize GEngine singleton with JobSystem
+    GEngine::Get().Initialize(jobSystem);
+
+    //-End-of-JobSystem-------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------
     //-Start-of-InputSystem---------------------------------------------------------------------------
 
     sInputSystemConfig constexpr sInputSystemConfig;
@@ -64,7 +77,7 @@ void App::Startup()
     sWindowConfig.m_windowType  = eWindowType::WINDOWED;
     sWindowConfig.m_aspectRatio = 2.f;
     sWindowConfig.m_inputSystem = g_input;
-    sWindowConfig.m_windowTitle = "FirstV8";
+    sWindowConfig.m_windowTitle = "ProtogameJS3D";
     g_window                    = new Window(sWindowConfig);
 
     //-End-of-Window----------------------------------------------------------------------------------
@@ -118,29 +131,74 @@ void App::Startup()
     //------------------------------------------------------------------------------------------------
     //-Start-of-LogSubsystem--------------------------------------------------------------------------
 
+    // Load LogSubsystem configuration from JSON file
     sLogSubsystemConfig config;
-    config.logFilePath      = "Logs/FirstV8.log";        // 日誌檔案路徑
-    config.enableConsole    = true;                   // 啟用控制台輸出
-    config.enableFile       = true;                      // 啟用檔案輸出
-    config.enableDebugOut   = true;                  // 啟用 Visual Studio 輸出
-    config.enableOnScreen   = true;                  // 啟用螢幕輸出
-    config.enableDevConsole = true;                // 啟用開發者控制台輸出
-    config.asyncLogging     = true;                    // 啟用非同步日誌
-    config.maxLogEntries    = 50000;                  // 記憶體中最大日誌條目數
-    config.timestampEnabled = true;               // 啟用時間戳記
-    config.threadIdEnabled  = true;                 // 啟用執行緒 ID
-    config.autoFlush        = false;                      // 不自動重新整理（效能考量）
 
-    // Enhanced smart rotation settings
-    config.enableSmartRotation = true;               // 啟用智能日誌輪轉 (Minecraft-style)
-    config.rotationConfigPath  = "Data/Config/LogRotation.json"; // 輪轉配置檔案路徑
+    try
+    {
+        std::ifstream configFile("Data/Config/LogConfig.json");
+        if (configFile.is_open())
+        {
+            nlohmann::json jsonConfig;
+            configFile >> jsonConfig;
+            config = sLogSubsystemConfig::FromJSON(jsonConfig);
 
-    // Configure Minecraft-style rotation settings
-    config.smartRotationConfig.maxFileSizeBytes = 100 * 1024 * 1024;  // 100MB per file
-    config.smartRotationConfig.maxTimeInterval  = std::chrono::hours(2); // 2 hours max per segment
-    config.smartRotationConfig.logDirectory     = "Logs";                   // Log directory
-    config.smartRotationConfig.currentLogName   = "latest.log";           // Current session log
-    config.smartRotationConfig.sessionPrefix    = "session";               // Archive prefix
+            // Simple success message (we can't use LogSubsystem yet as it's not initialized)
+            DebuggerPrintf("Loaded LogSubsystem config from JSON\n");
+        }
+        else
+        {
+            // Fallback to hardcoded defaults if JSON file not found
+            DebuggerPrintf("LogConfig.json not found, using default configuration\n");
+
+            config.logFilePath      = "Logs/ProtogameJS3D.log";
+            config.enableConsole    = true;
+            config.enableFile       = true;
+            config.enableDebugOut   = true;
+            config.enableOnScreen   = true;
+            config.enableDevConsole = true;
+            config.asyncLogging     = true;
+            config.maxLogEntries    = 50000;
+            config.timestampEnabled = true;
+            config.threadIdEnabled  = true;
+            config.autoFlush        = false;
+
+            // Enhanced smart rotation settings
+            config.enableSmartRotation = true;
+            config.rotationConfigPath  = "Data/Config/LogRotation.json";
+
+            // Configure Minecraft-style rotation settings
+            config.smartRotationConfig.maxFileSizeBytes = 100 * 1024 * 1024;
+            config.smartRotationConfig.maxTimeInterval  = std::chrono::hours(2);
+            config.smartRotationConfig.logDirectory     = "Logs";
+            config.smartRotationConfig.currentLogName   = "latest.log";
+            config.smartRotationConfig.sessionPrefix    = "session";
+        }
+    }
+    catch (nlohmann::json::exception const& e)
+    {
+        DebuggerPrintf("JSON parsing error in LogConfig.json: %s\n", e.what());
+
+        // Fallback to hardcoded defaults on error
+        config.logFilePath      = "Logs/ProtogameJS3D.log";
+        config.enableConsole    = true;
+        config.enableFile       = true;
+        config.enableDebugOut   = true;
+        config.enableOnScreen   = true;
+        config.enableDevConsole = true;
+        config.asyncLogging     = true;
+        config.maxLogEntries    = 50000;
+        config.timestampEnabled = true;
+        config.threadIdEnabled  = true;
+        config.autoFlush        = false;
+        config.enableSmartRotation = true;
+        config.rotationConfigPath  = "Data/Config/LogRotation.json";
+        config.smartRotationConfig.maxFileSizeBytes = 100 * 1024 * 1024;
+        config.smartRotationConfig.maxTimeInterval  = std::chrono::hours(2);
+        config.smartRotationConfig.logDirectory     = "Logs";
+        config.smartRotationConfig.currentLogName   = "latest.log";
+        config.smartRotationConfig.sessionPrefix    = "session";
+    }
 
     g_logSubsystem = new LogSubsystem(config);
 
@@ -261,6 +319,16 @@ void App::Shutdown()
     GAME_SAFE_RELEASE(g_input);
     GAME_SAFE_RELEASE(g_devConsole);
     GAME_SAFE_RELEASE(g_eventSystem);
+
+    // Shutdown GEngine singleton and JobSystem
+    GEngine::Get().Shutdown();
+
+    if (g_jobSystem)
+    {
+        g_jobSystem->ShutDown();
+        delete g_jobSystem;
+        g_jobSystem = nullptr;
+    }
 
     // Shutdown and delete LogSubsystem last
     if (g_logSubsystem)
