@@ -35,6 +35,7 @@ public:
     bool IsAttractMode() const;
     void ValidatePhase1ModuleSystem();
     void ValidatePhase2ModuleSystem();
+    void ValidatePhase3ModuleSystem();
 
     void ExecuteJavaScriptCommand(String const& command);
     void ExecuteJavaScriptFile(String const& filename);

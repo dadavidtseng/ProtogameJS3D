@@ -323,6 +323,90 @@ void Game::ValidatePhase2ModuleSystem()
 }
 
 //----------------------------------------------------------------------------------------------------
+void Game::ValidatePhase3ModuleSystem()
+{
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 3 Module System Validation ===");
+
+    if (g_scriptSubsystem == nullptr)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ScriptSubsystem is nullptr");
+        return;
+    }
+
+    if (!g_scriptSubsystem->IsInitialized())
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ScriptSubsystem not initialized");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ScriptSubsystem initialized");
+
+    // Test 1: Check if modules are enabled
+    if (!g_scriptSubsystem->AreModulesEnabled())
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ES6 modules not enabled");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ES6 modules enabled");
+
+    // Test 2: Get ModuleLoader instance
+    ModuleLoader* loader = g_scriptSubsystem->GetModuleLoader();
+    if (loader == nullptr)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ModuleLoader is nullptr");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ModuleLoader instance available");
+
+    // Test 3: Execute Phase 3 test module
+    // This module tests:
+    // - Dynamic import (import() function)
+    // - Enhanced import.meta
+    // - Error recovery
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "Testing Phase 3: Dynamic import, import.meta, error recovery...");
+
+    bool success = g_scriptSubsystem->ExecuteModule("Data/Scripts/test_phase3_main.js");
+
+    if (success)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Phase 3 test module executed successfully!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Dynamic import() working!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ import.meta available!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Error recovery working!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 3 Validation: PASS (Advanced Features Working) ===");
+    }
+    else
+    {
+        String error = g_scriptSubsystem->GetLastError();
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Phase 3 test execution failed: %s", error.c_str()));
+
+        // Check error type
+        if (error.find("Failed to read module file") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Test module file not found");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 3 Validation: FAIL (Missing test files) ===");
+        }
+        else if (error.find("import()") != String::npos || error.find("dynamic") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Dynamic import not working");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 3 Validation: FAIL (Dynamic import error) ===");
+        }
+        else if (error.find("Promise") != String::npos || error.find("async") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Async/Promise support issue");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 3 Validation: FAIL (Async/await not working) ===");
+        }
+        else
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Unexpected error: %s", error.c_str()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 3 Validation: FAIL ===");
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------
 void Game::UpdateFromKeyBoard()
 {
     if (m_gameState == eGameState::ATTRACT)
@@ -347,6 +431,10 @@ void Game::UpdateFromKeyBoard()
         if (g_input->WasKeyJustPressed(KEYCODE_F9))
         {
             ValidatePhase2ModuleSystem();
+        }
+        if (g_input->WasKeyJustPressed(KEYCODE_M))
+        {
+            ValidatePhase3ModuleSystem();
         }
         if (g_input->WasKeyJustPressed(KEYCODE_ESC))
         {
