@@ -4,13 +4,14 @@
 
 //----------------------------------------------------------------------------------------------------
 #include "Game/Player.hpp"
-
+//----------------------------------------------------------------------------------------------------
+#include "Game/Game.hpp"
+#include "Game/Framework/GameCommon.hpp"
+//----------------------------------------------------------------------------------------------------
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/Camera.hpp"
-#include "Framework/GameCommon.hpp"
-#include "Game/Game.hpp"
 
 //----------------------------------------------------------------------------------------------------
 Player::Player(Game* owner)

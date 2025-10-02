@@ -4,25 +4,13 @@
 
 //----------------------------------------------------------------------------------------------------
 #include "Game/Framework/GameScriptInterface.hpp"
-
-#include <chrono>
-#include <filesystem>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-
-#include "App.hpp"
-#include "Engine/Core/Clock.hpp"
-#include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
-#include "Engine/Core/LogSubsystem.hpp"
-#include "Engine/Core/StringUtils.hpp"
-#include "Engine/Math/Vec3.hpp"
-#include "Engine/Scripting/ScriptSubsystem.hpp"
-#include "Engine/Scripting/ScriptTypeExtractor.hpp"
+//----------------------------------------------------------------------------------------------------
 #include "Game/Game.hpp"
 #include "Game/Player.hpp"
+#include "Game/Framework/App.hpp"
 #include "Game/Framework/GameCommon.hpp"
+//----------------------------------------------------------------------------------------------------
+#include "Engine/Core/ErrorWarningAssert.hpp"
 
 //----------------------------------------------------------------------------------------------------
 GameScriptInterface::GameScriptInterface(Game* game)

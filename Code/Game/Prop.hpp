@@ -4,11 +4,10 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
-#include <vector>
-
-#include "Engine/Renderer/BitmapFont.hpp"
-#include "Engine/Renderer/VertexUtils.hpp"
+//----------------------------------------------------------------------------------------------------
 #include "Game/Entity.hpp"
+//----------------------------------------------------------------------------------------------------
+#include "Engine/Renderer/VertexUtils.hpp"
 
 //-Forward-Declaration--------------------------------------------------------------------------------
 class Texture;
@@ -29,5 +28,5 @@ public:
 
 private:
     std::vector<Vertex_PCU> m_vertexes;
-    Texture const* m_texture = nullptr;
+    Texture const*          m_texture = nullptr;
 };
