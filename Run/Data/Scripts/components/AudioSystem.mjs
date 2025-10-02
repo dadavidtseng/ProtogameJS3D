@@ -1,26 +1,27 @@
-//----------------------------------------------------------------------------------------------------
-// AudioSystem.js
-//----------------------------------------------------------------------------------------------------
+// AudioSystem.mjs
+// Phase 4 ES6 Module version using SystemComponent pattern
+
+import { SystemComponent } from '../core/SystemComponent.mjs';
 
 /**
- * AudioSystem.js
+ * AudioSystem - JavaScript wrapper for AudioScriptInterface
+ * Phase 4 ES6 Module using SystemComponent pattern
  *
- * JavaScript wrapper for AudioScriptInterface providing convenient audio functionality.
- * This system handles audio operations including sound loading, playback, and control.
- *
- * AI Agent Usage:
- * - This file contains pure audio logic that AI Agents can edit independently
- * - Provides JavaScript-friendly API over C++ AudioSystem functionality
- * - Designed for integration with InputSystem.js and other game systems
+ * Features:
+ * - Sound loading and caching
+ * - Basic and advanced playback control
+ * - Volume and playback state management
+ * - FMOD integration through C++ AudioScriptInterface
  */
-
-class AudioSystem {
+export class AudioSystem extends SystemComponent {
     constructor() {
+        super('audioSystem', 5, { enabled: true });
+
         this.loadedSounds = new Map(); // Cache for loaded sound IDs
         this.activeSounds = new Map(); // Track active playback IDs
         this.isInitialized = false;
 
-        console.log('CONSTRUCTOR: AudioSystem created at', Date.now());
+        console.log('AudioSystem: Module loaded (Phase 4 ES6)');
         this.initialize();
     }
 
@@ -66,7 +67,7 @@ class AudioSystem {
 
             // Load sound through C++ interface
             const soundID = audio.createOrGetSound(soundPath, dimension);
-            
+
             // Check against MISSING_SOUND_ID, not > 0 (sound ID 0 is valid!)
             if (soundID !== null && soundID !== undefined) {
                 this.loadedSounds.set(cacheKey, soundID);
@@ -96,7 +97,7 @@ class AudioSystem {
             }
 
             const playbackID = audio.startSound(soundID);
-            
+
             if (playbackID && playbackID > 0) {
                 this.activeSounds.set(playbackID, { soundID, startTime: Date.now() });
                 console.log(`AudioSystem: Started sound ${soundID} with playback ID ${playbackID}`);
@@ -130,16 +131,16 @@ class AudioSystem {
             }
 
             const playbackID = audio.startSoundAdvanced(soundID, isLooped, volume, balance, speed, isPaused);
-            
+
             if (playbackID && playbackID > 0) {
-                this.activeSounds.set(playbackID, { 
-                    soundID, 
-                    startTime: Date.now(), 
-                    isLooped, 
-                    volume, 
-                    balance, 
-                    speed, 
-                    isPaused 
+                this.activeSounds.set(playbackID, {
+                    soundID,
+                    startTime: Date.now(),
+                    isLooped,
+                    volume,
+                    balance,
+                    speed,
+                    isPaused
                 });
                 console.log(`AudioSystem: Started advanced sound ${soundID} with playback ID ${playbackID}`);
                 return playbackID;
@@ -188,12 +189,12 @@ class AudioSystem {
             }
 
             audio.setSoundVolume(playbackID, volume);
-            
+
             // Update cached info
             if (this.activeSounds.has(playbackID)) {
                 this.activeSounds.get(playbackID).volume = volume;
             }
-            
+
             console.log(`AudioSystem: Set volume ${volume} for playback ID ${playbackID}`);
             return true;
         } catch (error) {
@@ -211,8 +212,7 @@ class AudioSystem {
      */
     playSound(soundPath, dimension = "Sound2D", volume = 1.0) {
         const soundID = this.createOrGetSound(soundPath, dimension);
-        console.log(`AudioSystem: playSound ${soundID}`);
-        if (soundID) {
+        if (soundID !== null && soundID !== undefined) {
             const playbackID = this.startSound(soundID);
             if (playbackID && volume !== 1.0) {
                 this.setSoundVolume(playbackID, volume);
@@ -226,7 +226,7 @@ class AudioSystem {
      * Get system status and statistics
      * @returns {object} System status information
      */
-    getStatus() {
+    getSystemStatus() {
         return {
             isInitialized: this.isInitialized,
             loadedSoundsCount: this.loadedSounds.size,
@@ -268,32 +268,19 @@ class AudioSystem {
             for (const [playbackID] of this.activeSounds) {
                 this.stopSound(playbackID);
             }
-            
+
             // Clear caches
             this.loadedSounds.clear();
             this.activeSounds.clear();
-            
+
             console.log('AudioSystem: Cleanup completed');
         } catch (error) {
             console.log('AudioSystem: Error during cleanup:', error);
         }
     }
-
-    /**
-     * AI Agent Extension Point:
-     * Future AI Agents can add new audio handling methods here
-     *
-     * Examples for future AI Agent additions:
-     * - playBackgroundMusic(musicPath, volume, loop)
-     * - playSoundEffect(effectPath, volume, pitch)
-     * - create3DAudioAt(soundPath, x, y, z)
-     * - fadeInSound(playbackID, duration)
-     * - fadeOutSound(playbackID, duration)
-     */
 }
 
-// Static version for hot-reload detection - only changes when file is reloaded
-AudioSystem.version = Date.now();
+// Export for ES6 module system
+export default AudioSystem;
 
-// Make AudioSystem available globally for other systems
-globalThis.AudioSystem = AudioSystem;
+console.log('AudioSystem: Component loaded (Phase 4 ES6)');

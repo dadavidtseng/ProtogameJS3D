@@ -1,27 +1,19 @@
-//----------------------------------------------------------------------------------------------------
-// InputSystemCommon.js
-//----------------------------------------------------------------------------------------------------
+// InputSystemCommon.mjs
+// Phase 4 ES6 Module version of InputSystemCommon.js
 
 /**
- * InputSystemCommon.js
- *
  * JavaScript key code constants equivalent to C++ key code definitions.
  * Provides named constants for all keyboard and mouse input codes used by the InputSystem.
  *
  * Usage:
- * - import via: const { KEYCODE_SPACE, KEYCODE_F1 } = KeyCodes;
- * - or access via: KeyCodes.KEYCODE_SPACE, KeyCodes.KEYCODE_F1
+ * import { KEYCODE_SPACE, KEYCODE_F1, KEYCODE } from './InputSystemCommon.mjs';
  */
 
-const KEYCODE_F1 = 112;
-const KEYCODE_ESC = 27;
-const KEYCODE_SPACE = 32;
+export const KEYCODE_F1 = 112;
+export const KEYCODE_ESC = 27;
+export const KEYCODE_SPACE = 32;
 
-globalThis.KEYCODE_F1 = KEYCODE_F1;
-globalThis.KEYCODE_ESC = KEYCODE_ESC;
-globalThis.KEYCODE_SPACE = KEYCODE_SPACE;
-
-const KEYCODE = {
+export const KEYCODE = {
     // Number Keys (0-9)
     NUMCODE_0: 48,
     NUMCODE_1: 49,
@@ -63,6 +55,7 @@ const KEYCODE = {
     KEYCODE_Z: 90,
 
     // Function Keys (F1-F15)
+    KEYCODE_F1: 112,
     KEYCODE_F2: 113,
     KEYCODE_F3: 114,
     KEYCODE_F4: 115,
@@ -86,6 +79,8 @@ const KEYCODE = {
     KEYCODE_HOME: 36,
     KEYCODE_END: 35,
     KEYCODE_TILDE: 192,  // ` key
+    KEYCODE_ESC: 27,
+    KEYCODE_SPACE: 32,
 
     // Arrow Keys
     KEYCODE_UPARROW: 38,
@@ -106,10 +101,10 @@ const KEYCODE = {
     KEYCODE_RIGHT_MOUSE: 2,
 };
 
-// Make KeyCodes available globally for other JavaScript files
+// Make globally available for C++ legacy compatibility
+globalThis.KEYCODE_F1 = KEYCODE_F1;
+globalThis.KEYCODE_ESC = KEYCODE_ESC;
+globalThis.KEYCODE_SPACE = KEYCODE_SPACE;
 globalThis.KEYCODE = KEYCODE;
 
-// Static version for hot-reload detection
-KEYCODE.version = Date.now();
-
-console.log('KeyCodes: JavaScript key code constants initialized');
+console.log('InputSystemCommon: ES6 module loaded (Phase 4)');

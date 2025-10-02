@@ -1,9 +1,24 @@
 //----------------------------------------------------------------------------------------------------
-// JSEngine.js
+// JSEngine.mjs - Core JavaScript Engine Framework
 //----------------------------------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------------------------------
-class JSEngine {
+/**
+ * JSEngine - Core JavaScript engine with system registration framework
+ *
+ * Responsibilities:
+ * - Register and manage game systems
+ * - Execute systems in priority order
+ * - Bridge C++ engine methods to JavaScript
+ * - Handle hot-reload system integration
+ *
+ * Design Philosophy:
+ * - This file is CORE INFRASTRUCTURE - rarely edited
+ * - Systems register with JSEngine and execute every frame
+ * - Priority-based execution (0-100, lower = earlier)
+ * - Dual pattern support: legacy config objects + SystemComponent instances
+ */
+
+export class JSEngine {
     constructor() {
         this.game = null;
         this.isInitialized = true;
@@ -22,40 +37,6 @@ class JSEngine {
     }
 
     /**
-     * Initialize the engine
-     */
-    // initialize() {
-    //     console.log('JSEngine: Initializing...');
-    //     this.isInitialized = true;
-    //     this.frameCount = 0;
-    //
-    //     // Initialize hot-reload system
-    //     this.initializeHotReloadSystem();
-    //
-    //     return this;
-    // }
-
-    /**
-     * Initialize the hot-reload system - now handled by C++
-     */
-    // initializeHotReloadSystem() {
-    //     try {
-    //         console.log('JSEngine: Hot-reload system is now handled by C++ (FileWatcher + ScriptReloader)');
-    //
-    //         // The C++ hot-reload system is automatically initialized in App::SetupScriptingBindings()
-    //         // No JavaScript initialization needed - C++ handles file monitoring and script reloading
-    //         this.hotReloadEnabled = true;
-    //
-    //         console.log('JSEngine: C++ hot-reload system acknowledged');
-    //
-    //     } catch (error) {
-    //         console.log('JSEngine: Hot-reload system initialization failed:', error);
-    //         this.hotReloadEnabled = false;
-    //     }
-    // }
-
-
-    /**
      * Set the game instance
      */
     setGame(gameInstance) {
@@ -69,29 +50,60 @@ class JSEngine {
 
     /**
      * Register a system for runtime execution
-     * @param {string} id - Unique system identifier
-     * @param {Object} config - System configuration
+     * DUAL PATTERN SUPPORT (Phase 3.5 ECS modernization):
+     * - LEGACY: registerSystem('systemId', {update, render, priority, enabled, data})
+     * - NEW: registerSystem(null, systemComponentInstance) where instance.id is used
+     *
+     * @param {string|null} id - Unique system identifier (legacy) or null (new SystemComponent pattern)
+     * @param {Object|SystemComponent} configOrComponent - Config object (legacy) or SystemComponent instance (new)
      */
-    registerSystem(id, config = {}) {
-        if (!id || typeof id !== 'string') {
-            // console.error('JSEngine: System ID must be a non-empty string');
-            console.log('JSEngine: System ID must be a non-empty string');
-            return false;
+    registerSystem(id, configOrComponent = {}) {
+        let system;
+
+        // NEW PATTERN: SystemComponent instance (Phase 3.5)
+        // Detect by checking for id, priority properties and update/render methods
+        const isComponentInstance = configOrComponent &&
+                                   typeof configOrComponent === 'object' &&
+                                   configOrComponent.id &&
+                                   typeof configOrComponent.priority === 'number' &&
+                                   typeof configOrComponent.update === 'function';
+
+        if (isComponentInstance) {
+            // SystemComponent instance pattern
+            const component = configOrComponent;
+            system = {
+                id: component.id,
+                update: component.update ? component.update.bind(component) : null,
+                render: component.render ? component.render.bind(component) : null,
+                priority: component.priority,
+                enabled: component.enabled !== false,
+                data: component.data || {},
+                componentInstance: component // Keep reference for hot-reload detection
+            };
+
+            console.log(`JSEngine: Registered SystemComponent '${component.id}' (priority: ${component.priority}, ECS pattern)`);
+        } else {
+            // LEGACY PATTERN: Config object (backward compatibility)
+            if (!id || typeof id !== 'string') {
+                console.log('JSEngine: System ID must be a non-empty string (legacy pattern)');
+                return false;
+            }
+
+            system = {
+                id: id,
+                update: configOrComponent.update || null,
+                render: configOrComponent.render || null,
+                priority: configOrComponent.priority || 0,
+                enabled: configOrComponent.enabled !== false,
+                data: configOrComponent.data || {}
+            };
+
+            console.log(`JSEngine: Registered system '${id}' (priority: ${system.priority}, legacy pattern)`);
         }
 
-        const system = {
-            id: id,
-            update: config.update || null,
-            render: config.render || null,
-            priority: config.priority || 0,
-            enabled: config.enabled !== false,
-            data: config.data || {}
-        };
-
-        this.registeredSystems.set(id, system);
+        this.registeredSystems.set(system.id, system);
         this.queueOperation({type: 'register', system});
 
-        console.log(`JSEngine: Registered system '${id}' (priority: ${system.priority})`);
         return true;
     }
 
@@ -230,7 +242,6 @@ class JSEngine {
                     system.render();
                 } catch (error) {
                     console.log(`JSEngine: Error in system '${system.id}' render:`, error);
-                    // console.error(`JSEngine: Error in system '${system.id}' render:`, error);
                 }
             }
         }
@@ -315,9 +326,4 @@ class JSEngine {
     }
 }
 
-// Make the class globally available
-if (typeof globalThis !== 'undefined') {
-    globalThis.JSEngine = JSEngine;
-} else if (typeof window !== 'undefined') {
-    window.JSEngine = JSEngine;
-}
+console.log('JSEngine: Module loaded (Phase 4 ES6)');
