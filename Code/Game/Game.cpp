@@ -3,6 +3,11 @@
 //----------------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------------
+// Prevent Windows.h min/max macros from conflicting with V8 and standard library
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+//----------------------------------------------------------------------------------------------------
 #include "Game/Game.hpp"
 
 #include "Engine/Core/Clock.hpp"
@@ -18,6 +23,7 @@
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Resource/ResourceSubsystem.hpp"
 #include "Engine/Scripting/ScriptSubsystem.hpp"
+#include "Engine/Scripting/ModuleLoader.hpp"
 #include "Game/Player.hpp"
 #include "Game/Prop.hpp"
 #include "Game/Framework/App.hpp"
@@ -134,6 +140,188 @@ bool Game::IsAttractMode() const
     return m_gameState == eGameState::ATTRACT;
 }
 
+void Game::ValidatePhase1ModuleSystem()
+{
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 1 Module System Validation ===");
+
+    if (g_scriptSubsystem == nullptr)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ScriptSubsystem is nullptr");
+        return;
+    }
+
+    if (!g_scriptSubsystem->IsInitialized())
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ScriptSubsystem not initialized");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ScriptSubsystem initialized");
+
+    // Test 1: Check if modules are enabled
+    if (!g_scriptSubsystem->AreModulesEnabled())
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ES6 modules not enabled");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ES6 modules enabled");
+
+    // Test 2: Get ModuleLoader instance
+    ModuleLoader* loader = g_scriptSubsystem->GetModuleLoader();
+    if (loader == nullptr)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ModuleLoader is nullptr");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ModuleLoader instance available");
+
+    // Test 3: Test simple module compilation (no imports)
+    // NOTE: For Phase 1, we test a module WITHOUT import statements
+    // because import resolution is implemented in Phase 2
+    String const simpleModule = R"(
+        // Simple module with exports only (no imports)
+        // This tests Phase 1: module compilation and evaluation
+        console.log("Phase 1 module test: Starting execution");
+
+        export const testValue = 42;
+        export function testFunction() {
+            console.log("Phase 1 module system is working!");
+            return "success";
+        }
+        export class TestClass {
+            constructor(name) {
+                this.name = name;
+            }
+            greet() {
+                return `Hello from ${this.name}!`;
+            }
+        }
+
+        console.log("Phase 1 module test: Module loaded successfully!");
+    )";
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "Testing module compilation...");
+
+    bool success = g_scriptSubsystem->ExecuteModuleFromSource(simpleModule, "test://phase1_validation");
+
+    if (success)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Module compiled, instantiated, and evaluated successfully!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 1 Validation: PASS (Full Module Pipeline Working) ===");
+    }
+    else
+    {
+        String error = g_scriptSubsystem->GetLastError();
+        DAEMON_LOG(LogGame, eLogVerbosity::Warning, Stringf("Module execution result: %s", error.c_str()));
+
+        // Check if error is compilation-related or instantiation-related
+        if (error.find("compilation") != String::npos || error.find("Compilation") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Module compilation failed - Phase 1 infrastructure issue");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 1 Validation: FAIL ===");
+        }
+        else if (error.find("instantiation") != String::npos || error.find("Instantiation") != String::npos)
+        {
+            // Instantiation failure is EXPECTED in Phase 1 if module has imports
+            // But our test module has no imports, so this would be unexpected
+            DAEMON_LOG(LogGame, eLogVerbosity::Warning, "Module instantiation failed (check if ResolveModuleCallback is implemented)");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 1 Validation: PARTIAL PASS (Compilation works, instantiation needs Phase 2) ===");
+        }
+        else if (error.find("Integration with ScriptSubsystem pending") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Warning, "LoadModuleFromSource not yet implemented");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 1 Validation: INCOMPLETE (Need to implement LoadModuleFromSource) ===");
+        }
+        else
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Unexpected error: %s", error.c_str()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 1 Validation: FAIL ===");
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------
+void Game::ValidatePhase2ModuleSystem()
+{
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 2 Module System Validation ===");
+
+    if (g_scriptSubsystem == nullptr)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ScriptSubsystem is nullptr");
+        return;
+    }
+
+    if (!g_scriptSubsystem->IsInitialized())
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ScriptSubsystem not initialized");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ScriptSubsystem initialized");
+
+    // Test 1: Check if modules are enabled
+    if (!g_scriptSubsystem->AreModulesEnabled())
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ES6 modules not enabled");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ES6 modules enabled");
+
+    // Test 2: Get ModuleLoader instance
+    ModuleLoader* loader = g_scriptSubsystem->GetModuleLoader();
+    if (loader == nullptr)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, "FAIL: ModuleLoader is nullptr");
+        return;
+    }
+
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ ModuleLoader instance available");
+
+    // Test 3: Load main module that imports from another module
+    // This tests Phase 2: import resolution
+    DAEMON_LOG(LogGame, eLogVerbosity::Display, "Testing Phase 2: Import resolution from file...");
+
+    bool success = g_scriptSubsystem->ExecuteModule("Data/Scripts/test_phase2_main.js");
+
+    if (success)
+    {
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Module with imports loaded, compiled, and executed successfully!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Import resolution working!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "✓ Cross-module dependencies working!");
+        DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 2 Validation: PASS (Full Import Resolution Working) ===");
+    }
+    else
+    {
+        String error = g_scriptSubsystem->GetLastError();
+        DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Module execution failed: %s", error.c_str()));
+
+        // Check error type
+        if (error.find("Failed to read module file") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Test module file not found");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 2 Validation: FAIL (Missing test files) ===");
+        }
+        else if (error.find("instantiation") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Import resolution failed");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 2 Validation: FAIL (Import resolution not working) ===");
+        }
+        else if (error.find("compilation") != String::npos || error.find("Compilation") != String::npos)
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, "✗ Module compilation failed");
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 2 Validation: FAIL (Compilation error) ===");
+        }
+        else
+        {
+            DAEMON_LOG(LogGame, eLogVerbosity::Error, Stringf("Unexpected error: %s", error.c_str()));
+            DAEMON_LOG(LogGame, eLogVerbosity::Display, "=== Phase 2 Validation: FAIL ===");
+        }
+    }
+}
+
 //----------------------------------------------------------------------------------------------------
 void Game::UpdateFromKeyBoard()
 {
@@ -152,6 +340,14 @@ void Game::UpdateFromKeyBoard()
 
     if (m_gameState == eGameState::GAME)
     {
+        if (g_input->WasKeyJustPressed(KEYCODE_F8))
+        {
+            ValidatePhase1ModuleSystem();
+        }
+        if (g_input->WasKeyJustPressed(KEYCODE_F9))
+        {
+            ValidatePhase2ModuleSystem();
+        }
         if (g_input->WasKeyJustPressed(KEYCODE_ESC))
         {
             m_gameState = eGameState::ATTRACT;

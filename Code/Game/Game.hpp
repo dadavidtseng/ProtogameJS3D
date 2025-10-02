@@ -33,6 +33,8 @@ public:
     void RenderJS();
 
     bool IsAttractMode() const;
+    void ValidatePhase1ModuleSystem();
+    void ValidatePhase2ModuleSystem();
 
     void ExecuteJavaScriptCommand(String const& command);
     void ExecuteJavaScriptFile(String const& filename);
