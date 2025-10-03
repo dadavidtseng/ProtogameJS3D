@@ -46,6 +46,7 @@ export class InputSystem extends SystemComponent {
         // Periodic logging (every 300ms)
         if (this.logTimer >= 300) {
             console.log('MODIFY InputSystem HandleInput');
+
             this.logTimer = 0;
         }
 
