@@ -9,6 +9,7 @@ import { AudioSystem } from './components/AudioSystem.mjs';
 import { CubeSpawner } from './components/CubeSpawner.mjs';
 import { PropMover } from './components/PropMover.mjs';
 import { CameraShaker } from './components/CameraShaker.mjs';
+import { NewFeatureSystem } from './components/NewFeatureSystem.mjs';
 
 /**
  * JSGame - Game system coordinator
@@ -61,6 +62,7 @@ export class JSGame {
         this.propMover = new PropMover(this.engine);
         this.cameraShaker = new CameraShaker(this.engine);
 
+        this.newFeature = new NewFeatureSystem();
         console.log('JSGame: All component instances created (Phase 4 ES6)');
     }
 
@@ -84,6 +86,7 @@ export class JSGame {
         this.engine.registerSystem(null, this.propMover);       // Priority: 30
         this.engine.registerSystem(null, this.cameraShaker);    // Priority: 40
 
+        this.engine.registerSystem(null, this.newFeature);
         console.log('(JSGame::registerGameSystems)(end) - All systems registered with SystemComponent pattern');
     }
 
