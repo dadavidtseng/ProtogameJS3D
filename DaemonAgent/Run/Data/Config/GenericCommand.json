@@ -1,0 +1,14 @@
+{
+    "_comment": "GenericCommand System Configuration - Runtime-configurable parameters for the command queue and executor",
+    "_usage": {
+        "queueCapacity": "SPSC ring buffer capacity for GenericCommandQueue (default: 500)",
+        "rateLimitPerAgent": "Max commands per second per agent via token bucket. 0 = unlimited (default: 100)",
+        "enableAuditLogging": "Log every command execution with agent, type, result (default: false)",
+        "enableValidation": "Enable JS-side schema validation before C++ submission (default: true)"
+    },
+
+    "queueCapacity": 500,
+    "rateLimitPerAgent": 10000,
+    "enableAuditLogging": false,
+    "enableValidation": true
+}

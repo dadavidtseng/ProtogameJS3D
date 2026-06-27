@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- Game.vcxproj.filters - Application(.exe) Filters Configuration -->
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////////// -->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- Filter Hierarchy Definition -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Gameplay">
+      <UniqueIdentifier>{960b6e9d-ce87-4f51-97f1-2e293af9bfc3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Docs">
+      <UniqueIdentifier>{8f6262e8-8950-43f3-a0f7-ee09a9ca5217}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- Source File -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <ClCompile Include="Framework\App.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\GameCommon.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\JSGameLogicJob.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Main_Windows.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Gameplay\Game.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- Header File -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\App.hpp">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\GameCommon.hpp">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\JSGameLogicJob.hpp">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameplay\Game.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <!-- Documentation File -->
+  <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+  <ItemGroup>
+    <None Include="../../Docs/README.md">
+      <Filter>Docs</Filter>
+    </None>
+  </ItemGroup>
+</Project>
